@@ -76,10 +76,11 @@ struct thread* find_thread_from_pid(tid_t child_id);
   struct thread* 
   find_thread_from_pid(tid_t child_id)
   {
+    ASSERT (intr_get_level () == INTR_OFF);
     struct list_elem *e;
-    for(e=list_begin(&all_list);e!=list_end(&all_list);e=list_next(e))
+    for(e=list_begin(&thread_current()->children_list);e!=list_end(&thread_current()->children_list);e=list_next(e))
     {
-      struct thread *find = list_entry(e,struct thread,elem);
+      struct child_process *find = list_entry(e,struct child_process,elem);
       if(find->tid == child_id)
       {
         return find;
@@ -105,7 +106,7 @@ void
 thread_init (void) 
 {
   ASSERT (intr_get_level () == INTR_OFF);
-
+  lock_init(&filesys_lock);
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
