@@ -91,6 +91,11 @@ struct child_process
   bool beWait;  /* represent if it is being waited*/
   struct semaphore wait_sema;
 };
+struct proc_file {
+    struct file *ptr;
+    int fd;
+    struct list_elem elem;
+};
 struct thread
   {
     /* Owned by thread.c. */
