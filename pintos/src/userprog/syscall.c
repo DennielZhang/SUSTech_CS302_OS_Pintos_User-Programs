@@ -12,48 +12,47 @@ void *check_addr(const void *addr);
 void exit_process(status);
 int exec_proc(char *file_name);
 void exit_process(int status);
-void * check_addr(const void *addr);
+void *check_addr(const void *addr);
 
 void syscall_init(void)
 {
   intr_register_int(0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
-void stack_pop(int *esp, int *a, int offset){
-	int *tmp_esp = esp;
-	*a = *((int *)check_addr(tmp_esp + offset));
+void stack_pop(int *esp, int *a, int offset)
+{
+  int *tmp_esp = esp;
+  *a = *((int *)check_addr(tmp_esp + offset));
 }
 
-void 
-syscall_exit(struct intr_frame *f)
+void syscall_exit(struct intr_frame *f)
 {
   int status;
-  stack_pop(f->esp,&status,1);
+  stack_pop(f->esp, &status, 1);
   exit_process(status);
-
 }
 
 int exec_proc(char *file_name)
 {
-    lock_acquire(&filesys_lock);
-    char * fn_cp = malloc (strlen(file_name)+1);
-    strlcpy(fn_cp, file_name, strlen(file_name)+1);
+  lock_acquire(&filesys_lock);
+  char *fn_cp = malloc(strlen(file_name) + 1);
+  strlcpy(fn_cp, file_name, strlen(file_name) + 1);
 
-    char * save_ptr;
-    fn_cp = strtok_r(fn_cp," ",&save_ptr);
+  char *save_ptr;
+  fn_cp = strtok_r(fn_cp, " ", &save_ptr);
 
-    struct file* f = filesys_open (fn_cp);
+  struct file *f = filesys_open(fn_cp);
 
-    if(f==NULL)
-    {
-        lock_release(&filesys_lock);
-        return -1;
-    }
-    else
-    {
-        file_close(f);
-        lock_release(&filesys_lock);
-        return process_execute(file_name);
-    }
+  if (f == NULL)
+  {
+    lock_release(&filesys_lock);
+    return -1;
+  }
+  else
+  {
+    file_close(f);
+    lock_release(&filesys_lock);
+    return process_execute(file_name);
+  }
 }
 
 static void
@@ -72,22 +71,42 @@ syscall_handler(struct intr_frame *f UNUSED)
     syscall_exit(f);
     break;
   case SYS_EXEC: /* Start another process. */
-    {
+  {
     char *file_name = NULL;
     stack_pop(f->esp, &file_name, 1);
     if (!check_addr(file_name))
-      f->eax=-1;
+      f->eax = -1;
     else
       f->eax = exec_proc(f);
     break;
-    }
+  }
   case SYS_WAIT: /* Wait for a child process to die. */
-    {
+  {
     tid_t c_tid;
     stack_pop(f->esp, &c_tid, 1);
     f->eax = process_wait(c_tid);
     break;
-    }
+  }
+  case SYS_CREATE:
+
+    break;
+  case SYS_REMOVE:
+
+    break;
+  case SYS_OPEN:
+    break;
+  case SYS_FILESIZE:
+    break;
+  case SYS_READ:
+    break;
+  case SYS_WRITE:
+    break;
+  case SYS_SEEK:
+    break;
+  case SYS_TELL:
+    break;
+  case SYS_CLOSE:
+    break;
   default:
     printf("No match\n");
   }
