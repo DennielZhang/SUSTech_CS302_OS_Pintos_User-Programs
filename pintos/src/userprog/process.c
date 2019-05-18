@@ -129,7 +129,8 @@ process_exit (void)
   if (exit_code == INIT_EXIT_STAT)
     exit_process(-1);
   printf("%s: exit(%d)\n", cur->name, exit_code);
-  if(filesys_lock->holder == thread_current ()){
+  struct lock *lock = &filesys_lock;
+  if(lock->holder == thread_current ()){
     lock_release(&filesys_lock);
   }
   lock_acquire(&filesys_lock);
