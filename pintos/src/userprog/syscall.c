@@ -82,19 +82,19 @@ syscall_handler(struct intr_frame *f UNUSED)
 
 void process_exit(int status)
 {
-  struct child = *cp;
+  struct child_process = *cp;
   struct thread *cur_thd = thread_current();
 
   enum intr_level old_level = intr_disable();
-  for (struct list_elem *e = list_begin(&cur_thread->parent->children_list); e != list_end(&cur_thread->parent->children_list); e = list_next(e))
+  for (struct list_elem *e = list_begin(&cur_thd->parent->children_list); e != list_end(&cur_thd->parent->children_list); e = list_next(e))
   {
-    cp = list_entry(e, struct child_process, child_elem);
-    if (cp->tid == cur_thread->tid)
+    cp = list_entry(e, struct child_process, elem);
+    if (cp->tid == cur_thd->tid)
     {
       cp->if_waited = true;
       cp->exit_status = status;
     }
-    cur_thread->exit_status = status;
+    cur_thd->exit_status = status;
     intr_set_level(old_level);
     thread_exit();
   }
@@ -103,7 +103,7 @@ void *
 check_addr(const void *addr)
 {
   void *page_p = NULL;
-  if (!is_user_vaddr(addr) || !(page_ptr == pagedir_get_page(thread_current()->pagedir, vaddr)))
+  if (!is_user_vaddr(addr) || !(page_p == pagedir_get_page(thread_current()->pagedir, addr)))
   {
     process_exit(-1);
     return 0;
