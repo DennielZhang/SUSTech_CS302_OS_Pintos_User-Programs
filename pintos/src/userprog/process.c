@@ -17,7 +17,7 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
-
+# define WORD_SIZE 4
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 /* Starts a new thread running a user program loaded from
@@ -129,7 +129,7 @@ process_exit (void)
   int exit_code = cur->exit_status;
   printf("%s: exit(%d)\n", cur->name, exit_code);
   lock_acquire(&filesys_lock);
-  file_close(current_thread->self);
+  file_close(cur->self);
   struct list_elem *e;
   int cnt = 0;
   while(!list_empty(&thread_current()->files)){

@@ -5,7 +5,8 @@
 #include <list.h>
 #include <stdint.h>
 #include "fixed_point.h"
-
+#include <kernel/list.h>
+#include <threads/synch.h>
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -102,11 +103,12 @@ struct thread
     struct list_elem allelem;           /* List element for all threads list. */
     struct thread *parent; 
     struct list children_list;       /* Store the child */
-    bool haveSaved; /* if it has saved the return value */
+    bool load_success; /* if it has saved the return value */
     struct semaphore *load_sema;
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
     struct file *self;
+    struct list files;
     struct child_process * waiting_child;
     bool exec_success;
 #ifdef USERPROG
