@@ -29,7 +29,7 @@ syscall_exit(struct intr_frame *f)
 
 }
 
-int exec_proc(char *file_name)
+int exec_proc(struct intr_frame *f)
 {
     lock_acquire(&filesys_lock);
     char * fn_cp = malloc (strlen(file_name)+1);
@@ -59,25 +59,28 @@ syscall_handler(struct intr_frame *f UNUSED)
   int *call = f->esp;
   check_addr(call);
   int system_call = *call;
-  int exit_code;
 
   switch (system_call)
   {
   case SYS_HALT: /* Halt the operating system. */
     shutdown_power_off();
-
+    break;
   case SYS_EXIT: /* Terminate this process. */
     syscall_exit(f);
-
+    break;
   case SYS_EXEC: /* Start another process. */
-    check_addr(call + 1);
-    check_addr((void *)*(call + 1));
-    f->eax = exec_proc(*(call + 1));
+    char *file_name = NULL;
+    stack_pop(f->esp, &file_name, 1);
+    if (!is_valid_addr(file_name))
+      f->eax=-1;
+    else:
+      f->eax = exec_proc(f);
     break;
 
   case SYS_WAIT: /* Wait for a child process to die. */
-    check_addr(call + 1);
-    f->eax = process_wait(*(call + 1));
+    tid_t c_tid;
+	  pop_stack(f->esp, &child_tid, 1);
+    f->eax = process_wait(c_tid);
     break;
   default:
     printf("No match\n");
