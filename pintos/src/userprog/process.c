@@ -76,7 +76,7 @@ start_process (void *file_name_)
 
   if (!success) 
   {
-    ASSERT(thread_current()->parent->exit_status==INIT_EXIT_STAT)
+    // ASSERT(thread_current()->parent->exit_status==INIT_EXIT_STAT)
     thread_exit ();
   }
   sema_up(&thread_current()->parent->load_sema);
