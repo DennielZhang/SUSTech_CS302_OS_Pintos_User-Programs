@@ -25,7 +25,7 @@ typedef int tid_t;
 #define PRI_MIN 0                       /* Lowest priority. */
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
-
+#define INIT_EXIT_STAT -2333 
 struct lock filesys_lock; //a global lock for filesystem
 /* A kernel thread or user process.
 
