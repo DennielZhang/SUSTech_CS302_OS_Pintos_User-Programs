@@ -2,9 +2,7 @@
 #define THREADS_THREAD_H
 
 #include <debug.h>
-#include <list.h>
 #include <stdint.h>
-#include "fixed_point.h"
 #include <kernel/list.h>
 #include <threads/synch.h>
 /* States in a thread's life cycle. */
