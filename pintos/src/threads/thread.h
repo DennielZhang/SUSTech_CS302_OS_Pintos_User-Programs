@@ -85,15 +85,11 @@ struct child_process
 {
   int tid;
   int exit_status;
-  struct list_elem elem;
+  struct list_elem ch_elem;
   bool if_waited;  /* represent if it is being waited*/
   struct semaphore wait_sema;
 };
-struct proc_file {
-    struct file *ptr;
-    int fd;
-    struct list_elem elem;
-};
+
 struct thread
   {
     /* Owned by thread.c. */

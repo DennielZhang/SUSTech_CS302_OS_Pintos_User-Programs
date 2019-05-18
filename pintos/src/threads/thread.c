@@ -81,7 +81,7 @@ struct thread* find_thread_from_pid(tid_t child_id);
     struct list_elem *e;
     for(e=list_begin(&thread_current()->children_list);e!=list_end(&thread_current()->children_list);e=list_next(e))
     {
-      struct child_process *find = list_entry(e,struct child_process,elem);
+      struct child_process *find = list_entry(e,struct child_process,ch_elem);
       if(find->tid == child_id)
       {
         return e;
@@ -202,12 +202,12 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
-  struct child_process* c = malloc(sizeof(*c));
+  struct child_process *c = malloc(sizeof(*c));
   c->tid = tid;
   c->exit_status = t->exit_status;
   c->if_waited = false;
   sema_init (&(c->wait_sema), 0);
-  list_push_back (&running_thread()->children_list, &c->elem);
+  list_push_back (&running_thread()->children_list, &c->ch_elem);
 
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack'

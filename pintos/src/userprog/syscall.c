@@ -123,7 +123,7 @@ void exit_process(int status)
   enum intr_level old_level = intr_disable();
   for (struct list_elem *e = list_begin(&cur_thd->parent->children_list); e != list_end(&cur_thd->parent->children_list); e = list_next(e))
   {
-    cp = list_entry(e, struct child_process, elem);
+    cp = list_entry(e, struct child_process, ch_elem);
     if (cp->tid == cur_thd->tid)
     {
       cp->if_waited = true;

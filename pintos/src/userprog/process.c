@@ -105,7 +105,7 @@ process_wait (tid_t child_tid )
 {
   enum intr_level old_level = intr_disable();
   struct list_elem *e=find_thread_from_pid(child_tid);
-  struct child_process *ch = list_entry(e,struct child_process,elem);
+  struct child_process *ch = list_entry(e,struct child_process,ch_elem);
   intr_set_level (old_level);
   if(!ch || !e){
     return -1;
@@ -148,6 +148,12 @@ process_exit (void)
   file_close(cur->self);
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
+  while(!list_empty(&thread_current()->children_list))
+  {
+    elem_pop = list_pop_front(&thread_current()->children_list);
+    struct process_file *f = list_entry (elem_pop, struct child_process, ch_elem);
+    free(f);
+  }
   lock_release(&filesys_lock);
   pd = cur->pagedir;
   if (pd != NULL) 
