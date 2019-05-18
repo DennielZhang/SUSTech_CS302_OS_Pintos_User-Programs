@@ -114,6 +114,7 @@ struct thread
     struct list_elem elem;              /* List element. */
     struct file *self;
     struct list files;
+    int fd_count;
     struct child_process * waiting_child;
     bool exec_success;
 #ifdef USERPROG
