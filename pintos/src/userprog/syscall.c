@@ -10,7 +10,7 @@
 static void syscall_handler(struct intr_frame *);
 void *check_addr(const void *addr);
 void exit_process(status);
-int exec_proc(struct intr_frame *f);
+int exec_proc(char *file_name);
 void exit_process(int status);
 void * check_addr(const void *addr);
 
@@ -32,7 +32,7 @@ syscall_exit(struct intr_frame *f)
 
 }
 
-int exec_proc(struct intr_frame *f)
+int exec_proc(char *file_name)
 {
     lock_acquire(&filesys_lock);
     char * fn_cp = malloc (strlen(file_name)+1);
@@ -72,19 +72,22 @@ syscall_handler(struct intr_frame *f UNUSED)
     syscall_exit(f);
     break;
   case SYS_EXEC: /* Start another process. */
+    {
     char *file_name = NULL;
     stack_pop(f->esp, &file_name, 1);
-    if (!is_valid_addr(file_name))
+    if (!check_addr(file_name))
       f->eax=-1;
-    else:
+    else
       f->eax = exec_proc(f);
     break;
-
+    }
   case SYS_WAIT: /* Wait for a child process to die. */
+    {
     tid_t c_tid;
-	  pop_stack(f->esp, &child_tid, 1);
+    stack_pop(f->esp, &c_tid, 1);
     f->eax = process_wait(c_tid);
     break;
+    }
   default:
     printf("No match\n");
   }
