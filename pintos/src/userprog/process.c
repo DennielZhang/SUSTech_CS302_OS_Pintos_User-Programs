@@ -69,16 +69,14 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-
-  /* If load failed, quit. */
   palloc_free_page (file_name);
+  thread_current()->parent->exec_success = success;
+  /* If load failed, quit. */
+
   if (!success) 
   {
-    thread_current()->parent->exec_success = false;
+    ASSERT(current_thread->parent->exit_status==INIT_EXIT_STAT)
     thread_exit ();
-  }else
-  {
-    thread_current()->parent->exec_success = true; 
   }
   sema_up(&thread_current()->parent->load_sema);
   
@@ -128,9 +126,14 @@ process_exit (void)
   uint32_t *pd;
 
   int exit_code = cur->exit_status;
+  if (exit_code == INIT_EXIT_STAT)
+    exit_process(-1);
   printf("%s: exit(%d)\n", cur->name, exit_code);
+  if(lock->holder == thread_current ()){
+    lock_release(&filesys_lock);
+  }
   lock_acquire(&filesys_lock);
-  file_close(cur->self);
+  
   struct list_elem *e;
   int cnt = 0;
   while(!list_empty(&thread_current()->files)){
@@ -140,6 +143,7 @@ process_exit (void)
       list_remove(e);
       free(f);
   }
+  file_close(cur->self);
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   lock_release(&filesys_lock);

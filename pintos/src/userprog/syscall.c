@@ -10,6 +10,9 @@
 static void syscall_handler(struct intr_frame *);
 void *check_addr(const void *addr);
 void exit_process(status);
+int exec_proc(struct intr_frame *f);
+void exit_process(int status);
+void * check_addr(const void *addr);
 
 void syscall_init(void)
 {
