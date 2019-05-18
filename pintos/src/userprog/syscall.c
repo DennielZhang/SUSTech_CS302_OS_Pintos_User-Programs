@@ -82,7 +82,7 @@ syscall_handler(struct intr_frame *f UNUSED)
 
 void process_exit(int status)
 {
-  struct child_process = *cp;
+  struct child_process *cp;
   struct thread *cur_thd = thread_current();
 
   enum intr_level old_level = intr_disable();
