@@ -148,6 +148,7 @@ process_exit (void)
   file_close(cur->self);
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
+  struct list_elem *elem_pop;
   while(!list_empty(&thread_current()->children_list))
   {
     elem_pop = list_pop_front(&thread_current()->children_list);
