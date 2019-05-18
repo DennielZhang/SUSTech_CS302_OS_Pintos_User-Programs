@@ -3,7 +3,14 @@
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/vaddr.h"
+#include "userprog/process.h"
+#include "filesys/off_t.h"
+#include "kernel/list.h"
 static void syscall_handler(struct intr_frame *);
+void *check_addr(const void *addr);
+void exit_process(status);
+
 void syscall_init(void)
 {
   intr_register_int(0x30, 3, INTR_ON, syscall_handler, "syscall");
@@ -18,7 +25,7 @@ syscall_exit(struct intr_frame *f)
 {
   int status;
   stack_pop(f->esp,&status,1);
-  process_exit(status);
+  exit_process(status);
 
 }
 
@@ -80,7 +87,7 @@ syscall_handler(struct intr_frame *f UNUSED)
   thread_exit();
 }
 
-void process_exit(int status)
+void exit_process(int status)
 {
   struct child_process *cp;
   struct thread *cur_thd = thread_current();
@@ -105,7 +112,7 @@ check_addr(const void *addr)
   void *page_p = NULL;
   if (!is_user_vaddr(addr) || !(page_p == pagedir_get_page(thread_current()->pagedir, addr)))
   {
-    process_exit(-1);
+    exit_process(-1);
     return 0;
   }
   return page_p;

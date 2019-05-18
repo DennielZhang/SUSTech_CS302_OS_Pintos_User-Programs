@@ -38,7 +38,7 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, PGSIZE);
   char *real_name,*save_ptr;
   real_name = malloc(strlen(file_name)+1);
-  strcpy(real_name,file_name,strlen(file_name)+1);
+  strlcpy(real_name,file_name,strlen(file_name)+1);
   real_name = strtok_r(real_name,"",&save_ptr);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (real_name, PRI_DEFAULT, start_process, fn_copy);
@@ -113,7 +113,7 @@ process_wait (tid_t child_tid )
   }
   thread_current()->waiting_child = ch;
 
-  if(!ch->if_waited{
+  if(!ch->if_waited){
     sema_down(&ch->wait_sema);
   }
   list_remove(e);
