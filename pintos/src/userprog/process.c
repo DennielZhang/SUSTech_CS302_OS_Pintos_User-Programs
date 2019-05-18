@@ -113,11 +113,11 @@ process_wait (tid_t child_tid )
   }
   thread_current()->waiting_child = ch;
 
-  if(!ch->beWait){
+  if(!ch->if_waited{
     sema_down(&ch->wait_sema);
   }
   list_remove(e);
-  return ch->ret_value;
+  return ch->exit_status;
 }
 
 /* Free the current process's resources. */
