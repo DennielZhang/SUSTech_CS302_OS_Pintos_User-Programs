@@ -13,6 +13,7 @@
 #include "threads/vaddr.h"
 #ifdef USERPROG
 #include "userprog/process.h"
+#include "userprog/syscall.h"
 #endif
 
 /* Random value for struct thread's `magic' member.
@@ -206,7 +207,7 @@ thread_create (const char *name, int priority,
   c->exit_status = t->exit_status;
   c->if_waited = false;
   sema_init (&(c->wait_sema), 0);
-  list_push_back (&running_thread()->children_list, &c->child_elem);
+  list_push_back (&running_thread()->children_list, &c->elem);
 
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack'
@@ -503,7 +504,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_init (&t->children_list);
   t->parent = running_thread();
-  list_init (&t->opened_files);
+  list_init (&t->files);
   t->fd_count=2;
   t->exit_status = INIT_EXIT_STAT;
   sema_init(&t->load_sema,0);
