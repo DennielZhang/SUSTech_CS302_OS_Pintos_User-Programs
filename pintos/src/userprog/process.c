@@ -105,17 +105,18 @@ int
 process_wait (tid_t child_tid ) 
 {
   enum intr_level old_level = intr_disable();
-  struct child_process *child=find_thread_from_pid(child_tid);
+  struct list_elem *e=find_thread_from_pid(child_tid);
+  struct child_process *ch = list_entry(e,struct child_process,elem);
   intr_set_level (old_level);
-  if(!child){
+  if(!ch || !e){
     return -1;
   }
-  thread_current()->waiting_child = child;
+  thread_current()->waiting_child = ch;
 
   if(!child->beWait){
     sema_down(&child->wait_sema);
   }
-  list_remove(child);
+  list_remove(e);
   return child->ret_value;
 }
 

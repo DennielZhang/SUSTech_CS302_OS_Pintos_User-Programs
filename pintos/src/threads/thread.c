@@ -83,7 +83,7 @@ struct thread* find_thread_from_pid(tid_t child_id);
       struct child_process *find = list_entry(e,struct child_process,elem);
       if(find->tid == child_id)
       {
-        return find;
+        return e;
       }
     }
     return NULL;
