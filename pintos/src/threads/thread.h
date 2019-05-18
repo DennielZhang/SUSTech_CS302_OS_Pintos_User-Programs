@@ -86,9 +86,9 @@ struct lock filesys_lock; //a global lock for filesystem
 struct child_process
 {
   int tid;
-  int ret_value;
+  int exit_status;
   struct list_elem elem;
-  bool beWait;  /* represent if it is being waited*/
+  bool if_waited;  /* represent if it is being waited*/
   struct semaphore wait_sema;
 };
 struct proc_file {
