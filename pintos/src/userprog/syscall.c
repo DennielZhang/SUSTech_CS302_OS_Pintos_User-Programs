@@ -77,7 +77,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 		case SYS_HALT: pfn[system_call](f); break;
 		case SYS_EXIT: pfn[system_call](f); break;
 		case SYS_EXEC: pfn[system_call](f); break;
-		case SYS_WAIT: f->eax = syscall_wait(f); break;
+		case SYS_WAIT: pfn[system_call](f); break;
 		case SYS_CREATE: f->eax = syscall_creat(f); break;
 		case SYS_REMOVE: f->eax = syscall_remove(f); break;
 		case SYS_OPEN: f->eax = syscall_open(f); break;
@@ -211,9 +211,9 @@ syscall_exec(struct intr_frame *f)
 	char *file_name = NULL;
 	pop_stack(f->esp, &file_name, 1);
 	if (!is_valid_addr(file_name))
-		f->esp = -1;
+		f->eax = -1;
 
-	f->esp = exec_process(file_name);
+	f->eax = exec_process(file_name);
 }
 
 int
@@ -221,7 +221,7 @@ syscall_wait(struct intr_frame *f)
 {
 	tid_t child_tid;
 	pop_stack(f->esp, &child_tid, 1);
-	return process_wait(child_tid);
+	f->eax =  process_wait(child_tid);
 }
 
 int
