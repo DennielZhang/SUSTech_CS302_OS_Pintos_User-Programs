@@ -123,9 +123,8 @@ int process_wait(tid_t child_tid)
   struct list_elem *tmp_e;
 
   struct child_process *ch;
-
-  for (tmp_e = list_begin(thread_current()->children_list); tmp_e != list_end(thread_current()->children_list);
-       tmp_e = list_next(tmp_e))
+  struct list *ls = &thread_current()->children_list
+  for (tmp_e = list_begin(ls); tmp_e != list_end(ls);tmp_e = list_next(tmp_e))
   {
     ch = list_entry(tmp_e, struct child_process, child_elem);
     if (ch->tid == child_tid)
@@ -138,7 +137,7 @@ int process_wait(tid_t child_tid)
     }
   }
   
-  if(tmp_e==list_end(thread_current()->children_list)){
+  if(tmp_e==list_end(ls)){
     return -1;
   }
   thread_current()->waiting_child = ch;
