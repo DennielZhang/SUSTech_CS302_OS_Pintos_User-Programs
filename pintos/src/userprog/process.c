@@ -94,7 +94,7 @@ start_process(void *file_name_)
 
   if (!success)
   {
-    ASSERT(current_thread->parent->exit_status == INIT_EXIT_STAT)
+
     /* exit_status now should be INIT_EXIT_STAT handle later,
     becasuse process start fail, and  exit_status init value is INIT_EXIT_STAT. */
     thread_exit();
