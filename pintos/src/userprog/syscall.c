@@ -155,7 +155,7 @@ syscall_create(struct intr_frame *f)
 	off_t initial_size;
 	char *name;
 
-	pop_stack(f->esp, &initial_size, 5);
+	pop_stack(f->esp, &initial_size, 8);
 	pop_stack(f->esp, &name, 4);
 	if (!is_valid_addr(name))
 		ret = -1;
@@ -305,7 +305,7 @@ syscall_seek(struct intr_frame *f)
 {
 	int fd;
 	int pos;
-	pop_stack(f->esp, &fd, 5);
+	pop_stack(f->esp, &fd, 8);
 	pop_stack(f->esp, &pos, 4);
 
 	lock_acquire(&filesys_lock);
