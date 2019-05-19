@@ -212,6 +212,7 @@ syscall_exec(struct intr_frame *f)
 	pop_stack(f->esp, &file_name, 1);
 	if (!is_valid_addr(file_name))
 		f->eax = -1;
+		return;
 
 	f->eax = exec_process(file_name);
 }
