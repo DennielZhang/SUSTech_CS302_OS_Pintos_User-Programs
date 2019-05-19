@@ -31,9 +31,8 @@ void syscall_seek(struct intr_frame *f);
 void syscall_tell(struct intr_frame *f);
 void syscall_close(struct intr_frame *f);
 void syscall_halt(struct intr_frame *f);
-#define MAXCALL 21
-typedef void (*CALL_PROC)(struct intr_frame*);
-CALL_PROC pfn[MAXCALL];
+
+struct intr_frame* call_array[21];
 
 
 void pop_stack(int *esp, int *a, int offset){
@@ -49,20 +48,20 @@ syscall_init (void)
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
   int i;
   for(i=0;i<MAXCALL;i++)
-    pfn[i]=NULL;
-  pfn[SYS_WRITE]=syscall_write;
-  pfn[SYS_EXIT]=syscall_exit;
-  pfn[SYS_CREATE]=syscall_creat;
-  pfn[SYS_OPEN]=syscall_open;
-  pfn[SYS_CLOSE]=syscall_close;
-  pfn[SYS_READ]=syscall_read;
-  pfn[SYS_FILESIZE]=syscall_filesize;
-  pfn[SYS_EXEC]=syscall_exec;
-  pfn[SYS_WAIT]=syscall_wait;
-  pfn[SYS_SEEK]=syscall_seek;
-  pfn[SYS_REMOVE]=syscall_remove;
-  pfn[SYS_TELL]=syscall_tell;
-  pfn[SYS_HALT]=syscall_halt;
+    call_array[i]=NULL;
+  call_array[SYS_WRITE]=syscall_write;
+  call_array[SYS_EXIT]=syscall_exit;
+  call_array[SYS_CREATE]=syscall_creat;
+  call_array[SYS_OPEN]=syscall_open;
+  call_array[SYS_CLOSE]=syscall_close;
+  call_array[SYS_READ]=syscall_read;
+  call_array[SYS_FILESIZE]=syscall_filesize;
+  call_array[SYS_EXEC]=syscall_exec;
+  call_array[SYS_WAIT]=syscall_wait;
+  call_array[SYS_SEEK]=syscall_seek;
+  call_array[SYS_REMOVE]=syscall_remove;
+  call_array[SYS_TELL]=syscall_tell;
+  call_array[SYS_HALT]=syscall_halt;
 }
 
 static void
@@ -70,10 +69,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
   	int *p = f->esp;
 	is_valid_addr(p);
-
   	int system_call = *p;
-	pfn[system_call](f);
-	
+	call_array[system_call](f);
 }
 
 int
