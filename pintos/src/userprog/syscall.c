@@ -22,13 +22,13 @@ void get_content(int *esp, int *a, int offset)
 int exec_process(char *file_name)
 {
 	acquire_file_lock();
-	char *name_tmp = malloc(strlen(file_name) + 1);
-	strlcpy(name_tmp, file_name, strlen(file_name) + 1);
+	char *name = malloc(strlen(file_name) + 1);
+	strlcpy(name, file_name, strlen(file_name) + 1);
 
 	char *tmp_ptr;
-	name_tmp = strtok_r(name_tmp, " ", &tmp_ptr);
+	name = strtok_r(name, " ", &tmp_ptr);
 	/* check if the file exist*/
-	struct file *f = filesys_open(name_tmp);
+	struct file *f = filesys_open(name);
 
 	if (f == NULL)
 	{
@@ -68,8 +68,12 @@ void *
 check_address(const void *vaddr)
 {
 	void *page_ptr = NULL;
-	if (!is_user_vaddr(vaddr) || !(page_ptr = pagedir_get_page(thread_current()->pagedir, vaddr)))
+	if (!is_user_vaddr(vaddr))
 	{
+		exit_process(-1);
+		return 0;
+	}
+	if(!(page_ptr = pagedir_get_page(thread_current()->pagedir, vaddr))){
 		exit_process(-1);
 		return 0;
 	}
