@@ -293,7 +293,7 @@ void thread_exit(void)
   {
     if (thread_current()->parent->waiting_child->tid == thread_current()->tid){
       sema_up(&thread_current()->parent->waiting_child->wait_sema);
-      thread_current()->parent->waiting_child=NULL;
+      // thread_current()->parent->waiting_child=NULL;
     }
 
   }
