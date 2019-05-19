@@ -602,10 +602,10 @@ setup_stack (void **esp, char * file_name)
 static bool
 install_page (void *upage, void *kpage, bool writable)
 {
-  struct thread *cp_esp = thread_current ();
+  struct thread *t = thread_current ();
 
   /* Verify that there's not already a page at that virtual
      address, then map our page there. */
-  return (pagedir_get_page (cp_esp->pagedir, upage) == NULL
-          && pagedir_set_page (cp_esp->pagedir, upage, kpage, writable));
+  return (pagedir_get_page (t->pagedir, upage) == NULL
+          && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
