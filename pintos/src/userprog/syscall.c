@@ -10,12 +10,8 @@
 //#include "devices/shutdown.h"
 typedef void (*CALL_PROC)(struct intr_frame*);
 CALL_PROC sys_array[21];
-static void syscall_handler (struct intr_frame *);
-int exec_process(char *file_name);
-void exit_process(int status);
+
 void * check_address(const void *vaddr);
-struct process_file* search_one_file(struct list* files, int fd);
-void clean_single_file(struct list* files, int fd);
 void get_content(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
 	*a = *((int *)check_address(tmp_esp + offset));

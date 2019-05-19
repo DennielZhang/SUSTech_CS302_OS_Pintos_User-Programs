@@ -24,10 +24,14 @@ static thread_func start_process NO_RETURN;
 static bool load(const char *cmdline, void (**eip)(void), void **esp);
 
 extern struct list all_list;
+
+/* release the file lock*/
 void release_file_lock()
 {
   lock_release(&filesys_lock);
 }
+
+/* acquire the file lock*/
 void acquire_file_lock()
 {
   lock_acquire(&filesys_lock);
@@ -52,7 +56,8 @@ tid_t process_execute(const char *file_name)
   char *save_ptr;
   real_name = malloc(strlen(file_name) + 1);
   strlcpy(real_name, file_name, strlen(file_name) + 1);
-  real_name = strtok_r(real_name, " ", &save_ptr); // get the thread name
+  /* get the thread name*/
+  real_name = strtok_r(real_name, " ", &save_ptr); 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create(real_name, PRI_DEFAULT, start_process, fn_copy);
   free(real_name); 
@@ -123,6 +128,7 @@ int process_wait(tid_t child_tid)
 
   struct child_process *ch;
   struct list *ls = &thread_current()->children_list;
+  /* find the child that we want to wait*/
   for (tmp_e = list_begin(ls); tmp_e != list_end(ls);tmp_e = list_next(tmp_e))
   {
     ch = list_entry(tmp_e, struct child_process, child_elem);
@@ -136,7 +142,7 @@ int process_wait(tid_t child_tid)
     return -1;
   }
   thread_current()->waiting_child = ch;
-
+  /* has been waited once or has already stopped*/
   if(!ch->if_waited)
     sema_down(&ch->wait_sema);
 
@@ -160,6 +166,7 @@ void process_exit(void)
   struct list *files = &current_thread->opened_files;
   struct process_file *proc_f;
   struct list_elem *e;
+  /* close all files*/
   while (!list_empty(files))
   {
     e = list_pop_front(files);
@@ -295,17 +302,12 @@ bool load(const char *file_name, void (**eip)(void), void **esp)
   process_activate();
 
   /* Open executable file. */
-
   char *fn_cp = malloc(strlen(file_name) + 1);
   strlcpy(fn_cp, file_name, strlen(file_name) + 1);
-
   char *temp_ptr;
   fn_cp = strtok_r(fn_cp, " ", &temp_ptr);
-
   file = filesys_open(fn_cp);
-
   free(fn_cp);
-  //TODO : Free fn_cp
 
   if (file == NULL)
   {
@@ -543,7 +545,7 @@ setup_stack(void **esp, char *file_name)
       is_lastone_space = false;
   }
   intr_set_level(old_level);
-
+  /* allocate memory */
   int *argv = calloc(argc, sizeof(int));
 
   int i;
@@ -555,17 +557,16 @@ setup_stack(void **esp, char *file_name)
     argv[i] = *esp;
   }
 
-  // word align
+  /* word alignment */
   while ((int) *esp % 4 != 0) {
         *esp -= sizeof(char);
         char x = 0;
         memcpy(*esp, &x, sizeof(char));
   }
 
-  //null ptr sentinel: null at argv[argc]
   *esp -= sizeof(int);
 
-  //push address
+  /* push address*/
   for (i = argc - 1; i >= 0; i--)
   {
     *esp -= sizeof(int);
