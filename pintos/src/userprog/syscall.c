@@ -40,7 +40,7 @@ void pop_stack(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
 	*a = *((int *)is_valid_addr(tmp_esp + offset));
 }
-void syscall_halt(void){
+void syscall_halt(struct intr_frame *f ){
 	shutdown_power_off();
 }
 void
@@ -74,7 +74,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   	int system_call = *p;
 	switch (system_call)
 	{
-		case SYS_HALT: pfn[system_call](void); break;
+		case SYS_HALT: pfn[system_call](f); break;
 		case SYS_EXIT: pfn[system_call](f); break;
 		case SYS_EXEC: f->eax = syscall_exec(f); break;
 		case SYS_WAIT: f->eax = syscall_wait(f); break;
