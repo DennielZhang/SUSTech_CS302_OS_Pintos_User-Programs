@@ -239,7 +239,7 @@ syscall_read(struct intr_frame *f)
 	if (!is_valid_addr(buffer))
 		ret = -1;
 
-	if (fd == 0)
+	if (fd == STDIN_FILENO)/* read from std input*/
 	{
 		int i;
 		uint8_t *buffer = buffer;
@@ -247,7 +247,7 @@ syscall_read(struct intr_frame *f)
 			buffer[i] = input_getc();
 		ret = size;
 	}
-	else
+	else /* read from file*/
 	{
 		struct process_file *pf = search_fd(&thread_current()->opened_files, fd);
 		if (pf == NULL)
