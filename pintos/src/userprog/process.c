@@ -118,6 +118,8 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid)
 {
+  if (child_tid == TID_ERROR)
+        return -1;
   struct thread *current_thread = thread_current ();
 
   enum intr_level old_level = intr_disable();
@@ -133,9 +135,6 @@ process_wait (tid_t child_tid)
     }
   }
   struct child_process *ch = list_entry (tmp_e, struct child_process, child_elem);
-
-
-  
   intr_set_level (old_level);
 
   if(!ch || !tmp_e)
@@ -146,11 +145,10 @@ process_wait (tid_t child_tid)
 
   if(!ch->if_waited){
     sema_down(&ch->wait_sema);
-
-     //ch->if_waited=true;
+    ch->if_waited=true;
    }
-  // else    //if the child process has been waited
-  //   return -1;
+  else    //if the child process has been waited
+    return -1;
 
   list_remove(tmp_e);
 
