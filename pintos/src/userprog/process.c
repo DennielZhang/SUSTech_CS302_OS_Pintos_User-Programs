@@ -55,17 +55,16 @@ tid_t process_execute(const char *file_name)
   strlcpy(real_name, file_name, strlen(file_name) + 1);
   real_name = strtok_r(real_name, " ", &save_ptr); // get the thread name
   /* Create a new thread to execute FILE_NAME. */
-  //printf("%d\n", current_thread->tid);
   tid = thread_create(real_name, PRI_DEFAULT, start_process, fn_copy);
-  free(real_name); //free the file name created by malloc mannually
+  free(real_name); 
   if (tid == TID_ERROR)
   {
     free(fn_copy);
     return tid;
   }
-
-  sema_down(&thread_current()->load_sema); //keep the thread waiting until start_process() exits.
-  if (!thread_current()->load_success)     //if the child process is not loaded successfully
+  /* keep it waiting until start()*/
+  sema_down(&thread_current()->load_sema);
+  if (!thread_current()->load_success)     
     return TID_ERROR;
 
   return tid;
