@@ -99,7 +99,7 @@ It is the repository for project2 in Operating System
     ```c
     struct thread{
     	...
-        bool load_success;
+        bool load_success; /* to record if it's child is loaded successfully */
         struct semaphore load_sema;  
         int exit_status; /* store the exit code for a thread */
         struct list children_list; /* the list to store all the children */
@@ -108,7 +108,6 @@ It is the repository for project2 in Operating System
     }
     struct child_process{
     	/* this structure is used to store the information of a thread as a child and stored in parent process's `child_list` */
-        
     }
     ```
 
@@ -136,6 +135,10 @@ It is the repository for project2 in Operating System
 
     1. modified `init_thread`
     2. modified `thread_create`
+
+  - Modified `exception.c` 
+
+    1. modified `kill`
 
 - Algorithms
 
@@ -178,7 +181,15 @@ It is the repository for project2 in Operating System
 
       The main idea is that, if a process want to wait for one of its children. This process needs to be blocked until the waited child finished and returned the exit value.
 
-      In `syscall.c`, we first get the child tid that the thread want to wait. Then we call `process_wait` in `process.c` to perform wait. In `process_wait`, we first find the child thread by traverse the `children list` of the current thread to make sure that this is a real child and it is not the second time to wait for it. Then after finding it. We implement the *wait* with semaphore(This will be discussed later). To wait a child, the parent thread need to *down* the semaphore of that child. And, when the child exits, it need to `up` its semaphore if there is one thread is waiting for it.
+      In `syscall.c`, we first get the child tid that the thread want to wait. Then we call `process_wait` in `process.c` to perform wait. In `process_wait`, we first find the child thread by traverse the `children list` of the current thread to make sure that this is a real child and it is not the second time to wait for it and if this child has already stopped. Then after finding it. We implement the *wait* with semaphore(This will be discussed later). To wait a child, the parent thread need to *down* the semaphore of that child. And, when the child exits, it need to `up` its semaphore if there is one thread is waiting for it.
+
+    * **Exit**
+
+      Although original pintos support for *Exit*, it need to be modified due to the modification of other part. 
+
+      Its handler is `syscall_exit`. In this, it first modify its information stored in its parent as a child like: `exit_status`,`if_waited`. Then call `thread_exit` to exit.
+
+      We also need to modify `kill` method in `exception.c` as it just calls `thread_exit` when terminate a thread. We need to change it to `exit_process`.
 
 - Synchronization 
 
@@ -195,6 +206,16 @@ It is the repository for project2 in Operating System
     ​``````````````
     sema_up(&thread_current()->parent->waiting_child->wait_sema);
     ```
+
+    Also, we use semaphore to record if a child thread is actually started(loaded). In method `process_execute` in file `process.c`, after create a thread, we first *down* the semaphore and in `start_process` , after successfully loading, we *up* thee semaphore.
+
+    ```c
+    sema_down(&thread_current()->load_sema);
+    ​``````````````
+    sema_up(&thread_current()->parent->load_sema);
+    ```
+
+    
 
 - Rationale 
 
@@ -260,18 +281,100 @@ It is the repository for project2 in Operating System
 
     - **remove** 
 
-      
+      Its handler is `syscall_remove`. This syscall will remove a file. First it get the file name and check if it's valid. Then it use `filesys_remove` to remove the file.
 
     - **filesize** 
 
-      Its handler is `syscall_filesize`. This syscall will return the size of a file. First it will get the name of a file and 
+      Its handler is `syscall_filesize`. This syscall will return the size of a file. First it will get the name of a file and then use `file_length` to get the file length.
 
     - **read**
 
+      Its handler is `syscall_read`. This syscall will perform a read operation. First it will get the size, buffer , fd(file descriptor) information. Then according to fd to judge where to read(stdin or file).
+
     - **seek** 
+
+      Its handler is `syscall_seek`. This syscall will set the current position in a file to a new position. It first got the file descriptor and the new position then use `file_seek` to set the position.
 
     - **tell**
 
+      Its handler is `syscall_call`. This syscall will return the current position in a file. It first gets the file descriptor and then use `file_tell` to get the current position.
+
+    - **close**
+
+      Its handler is `syscall_close`. This syscall will close one file for a thread. It get the file descriptor and use `clean_single_file` to close it.
+
 - Synchronization 
 
+  Here these syscalls are all concerned with file operation. So we acquire the file lock `sysfile_lock` before performing these operations and release after.
+
 - Rationale 
+
+
+
+### Questions in PDF
+
+- A reflection on the project–what exactly did each member do? What went well, and what could be improved? 
+
+  *Our members are*: ZHANG Zhaoxu(ZZX), WANG Yutong(WYT)
+
+  *Division*:
+
+  ​	*Task1:* ZZX+WYT
+
+  ​	*Task2:* ZZX
+
+  ​	*Task3:* WYT
+
+  ​	*Report:* ZZX+WYT
+
+  *What went well:* our division is quite specific and clear, so we can work individually and simultaneously.
+
+  *Improvement:* due to lack of communication, some times we might implement methods with similar functions which is a waste of time.
+
+  
+
+- Does your code exhibit any major memory safety problems (especially regarding C strings), memory leaks, poor error handling, or race conditions? 
+
+  Actually, no these things happened. I guess it might because that, everytime we created one element use `malloc`, we will release it after using.
+
+  
+
+- Did you use consistent code style? Your code should blend in with the existing Pintos code. Check your use of indentation, your spacing, and your naming conventions. 
+
+  Checked, and we take the naming convention same with Pintos which is seperated by `_` and we formated our code to keep a consistent style.
+
+  
+
+- Is your code simple and easy to understand? 
+
+  Yes, I think it's quite easy to understand, we encapsulated same function code into method. And we also made comment under the code.
+
+  
+
+- If you have very complex sections of code in your solution, did you add enough comments to explain them? 
+
+  I guess we added enought comment to explain.
+
+  
+
+- Did you leave commented-out code in your final submission? 
+
+  Ok I removed them all.
+
+  
+
+- Did you copy-paste code instead of creating reusable functions? 
+
+  I encapsulated all duplicate code into functions that I have found.
+
+  
+
+- Are your lines of source code excessively long? (more than 100 characters) 
+
+  No. It's too ugly.
+
+  
+
+- Did you re-implement linked list algorithms instead of using the provided list manipulation?
+
+  Absolutely not, I used the list provided by pintos/
