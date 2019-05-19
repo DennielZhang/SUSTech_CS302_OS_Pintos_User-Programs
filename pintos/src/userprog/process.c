@@ -550,12 +550,11 @@ setup_stack (void **esp, char * file_name)
   int *argv = calloc(argc,sizeof(int));
 
   int i;
-  token = strtok_r (file_name, " ", &temp_ptr);
-  for (i=0;token!=NULL ; i++){
+  
+  for (i=0,token = strtok_r (file_name, " ", &temp_ptr);token!=NULL ; i++,token = strtok_r (NULL, " ", &temp_ptr);){
       *esp -= (strlen(token) + 1);
       memcpy(*esp,token,strlen(token) + 1);
       argv[i]=*esp;
-      token = strtok_r (NULL, " ", &temp_ptr);
   }
   free(token);
   /* make the word alignment */
