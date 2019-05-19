@@ -16,19 +16,7 @@ void exit_process(int status);
 void * is_valid_addr(const void *vaddr);
 struct process_file* search_fd(struct list* files, int fd);
 void clean_single_file(struct list* files, int fd);
-void syscall_exit(struct intr_frame *f);
-void syscall_exec(struct intr_frame *f);
-void syscall_wait(struct intr_frame *f);
-void syscall_creat(struct intr_frame *f);
-void syscall_remove(struct intr_frame *f);
-void syscall_open(struct intr_frame *f);
-void syscall_filesize(struct intr_frame *f);
-void syscall_read(struct intr_frame *f);
-void syscall_write(struct intr_frame *f);
-void syscall_seek(struct intr_frame *f);
-void syscall_tell(struct intr_frame *f);
-void syscall_close(struct intr_frame *f);
-void syscall_halt(struct intr_frame *f);
+
 
 void pop_stack(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
@@ -37,36 +25,7 @@ void pop_stack(int *esp, int *a, int offset){
 void syscall_halt(struct intr_frame *f ){
 	shutdown_power_off();
 }
-void
-syscall_init (void)
-{
-  intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-  int i;
-  for(i=0;i<21;i++)
-    sys_array[i]=NULL;
-  sys_array[SYS_WRITE]=syscall_write;
-  sys_array[SYS_EXIT]=syscall_exit;
-  sys_array[SYS_CREATE]=syscall_creat;
-  sys_array[SYS_OPEN]=syscall_open;
-  sys_array[SYS_CLOSE]=syscall_close;
-  sys_array[SYS_READ]=syscall_read;
-  sys_array[SYS_FILESIZE]=syscall_filesize;
-  sys_array[SYS_EXEC]=syscall_exec;
-  sys_array[SYS_WAIT]=syscall_wait;
-  sys_array[SYS_SEEK]=syscall_seek;
-  sys_array[SYS_REMOVE]=syscall_remove;
-  sys_array[SYS_TELL]=syscall_tell;
-  sys_array[SYS_HALT]=syscall_halt;
-}
 
-static void
-syscall_handler (struct intr_frame *f UNUSED)
-{
-  	int *p = f->esp;
-	is_valid_addr(p);
-  	int system_call = *p;
-	sys_array[system_call](f);
-}
 int
 exec_process(char *file_name)
 {
@@ -96,19 +55,17 @@ void
 exit_process(int status)
 {
 	struct child_process *cp;
-	struct thread *cur_thread = thread_current();
-
 	enum intr_level old_level = intr_disable();
-	for (struct list_elem *e = list_begin(&cur_thread->parent->children_list); e != list_end(&cur_thread->parent->children_list); e = list_next(e))
+	for (struct list_elem *e = list_begin(&thread_current()->parent->children_list); e != list_end(&thread_current()->parent->children_list); e = list_next(e))
 	{
 		cp = list_entry(e, struct child_process, child_elem);
-		if (cp->tid == cur_thread->tid)
+		if (cp->tid == thread_current()->tid)
 		{
 			cp->if_waited = true;
 			cp->exit_status = status;
 		}
 	}
-	cur_thread->exit_status = status;
+	thread_current()->exit_status = status;
 	intr_set_level(old_level);
 
 	thread_exit();
@@ -390,4 +347,35 @@ syscall_close(struct intr_frame *f)
 	lock_acquire(&filesys_lock);
 	clean_single_file(&thread_current()->opened_files, fd);
 	lock_release(&filesys_lock);
+}
+
+void
+syscall_init (void)
+{
+  intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+  int i;
+  for(i=0;i<21;i++)
+    sys_array[i]=NULL;
+  sys_array[SYS_WRITE]=syscall_write;
+  sys_array[SYS_EXIT]=syscall_exit;
+  sys_array[SYS_CREATE]=syscall_creat;
+  sys_array[SYS_OPEN]=syscall_open;
+  sys_array[SYS_CLOSE]=syscall_close;
+  sys_array[SYS_READ]=syscall_read;
+  sys_array[SYS_FILESIZE]=syscall_filesize;
+  sys_array[SYS_EXEC]=syscall_exec;
+  sys_array[SYS_WAIT]=syscall_wait;
+  sys_array[SYS_SEEK]=syscall_seek;
+  sys_array[SYS_REMOVE]=syscall_remove;
+  sys_array[SYS_TELL]=syscall_tell;
+  sys_array[SYS_HALT]=syscall_halt;
+}
+
+static void
+syscall_handler (struct intr_frame *f UNUSED)
+{
+  	int *p = f->esp;
+	is_valid_addr(p);
+  	int system_call = *p;
+	sys_array[system_call](f);
 }
