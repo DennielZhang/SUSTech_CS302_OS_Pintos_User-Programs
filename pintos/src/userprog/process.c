@@ -556,7 +556,7 @@ setup_stack (void **esp, char * file_name)
       memcpy(*esp,token,strlen(token) + 1);
       argv[i]=*esp;
   }
-  free(token);
+
   /* make the word alignment */
   *esp -= ((unsigned)*esp % WORD_SIZE);
 
