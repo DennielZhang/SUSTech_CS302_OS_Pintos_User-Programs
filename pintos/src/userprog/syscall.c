@@ -13,12 +13,12 @@ CALL_PROC sys_array[21];
 static void syscall_handler (struct intr_frame *);
 int exec_process(char *file_name);
 void exit_process(int status);
-void * is_valid_addr(const void *vaddr);
+void * check_address(const void *vaddr);
 struct process_file* search_one_file(struct list* files, int fd);
 void clean_single_file(struct list* files, int fd);
 void get_content(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
-	*a = *((int *)is_valid_addr(tmp_esp + offset));
+	*a = *((int *)check_address(tmp_esp + offset));
 }
 int
 exec_process(char *file_name)
@@ -66,7 +66,7 @@ exit_process(int status)
 }
 
 void *
-is_valid_addr(const void *vaddr)
+check_address(const void *vaddr)
 {
 	void *page_ptr = NULL;
 	if (!is_user_vaddr(vaddr) || !(page_ptr = pagedir_get_page(thread_current()->pagedir, vaddr)))
@@ -136,7 +136,7 @@ syscall_exec(struct intr_frame *f)
 {
 	char *file_name = NULL;
 	get_content(f->esp, &file_name, 1);
-	if (!is_valid_addr(file_name))
+	if (!check_address(file_name))
 		f->eax = -1;
 	else
 		f->eax = exec_process(file_name);
@@ -154,11 +154,11 @@ syscall_create(struct intr_frame *f)
 	int ret;
 	off_t initial_size;
 	char *name;
-	// initial_size = *((int *)is_valid_addr(f->esp + 5));
+	// initial_size = *((int *)check_address(f->esp + 5));
 	get_content(f->esp, &initial_size, 5);
-	// name = *((int *)is_valid_addr(f->esp + 4));
+	// name = *((int *)check_address(f->esp + 4));
 	get_content(f->esp, &name, 4);
-	if (!is_valid_addr(name))
+	if (!check_address(name))
 		ret = -1;
 
 	lock_acquire(&filesys_lock);
@@ -173,7 +173,7 @@ syscall_remove(struct intr_frame *f)
 	char *name;
 
 	get_content(f->esp, &name, 1);
-	if (!is_valid_addr(name))
+	if (!check_address(name))
 		ret = -1;
 
 	lock_acquire(&filesys_lock);
@@ -192,7 +192,7 @@ syscall_open(struct intr_frame *f)
 	char *name;
 
 	get_content(f->esp, &name, 1);
-	if (!is_valid_addr(name))
+	if (!check_address(name))
 		ret = -1;
 
 	lock_acquire(&filesys_lock);
@@ -237,7 +237,7 @@ syscall_read(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	if (!is_valid_addr(buffer)||!is_valid_addr(buffer+size))
+	if (!check_address(buffer)||!check_address(buffer+size))
 		ret = -1;
 
 	if (fd == STDIN_FILENO)/* read from std input*/
@@ -275,7 +275,7 @@ syscall_write(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	if (!is_valid_addr(buffer) || !is_valid_addr(buffer+size))
+	if (!check_address(buffer) || !check_address(buffer+size))
 		ret = -1;
 
 	if (fd == 1)
@@ -361,7 +361,7 @@ static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
   	int *p = f->esp;
-	is_valid_addr(p);
+	check_address(p);
   	int system_call = *p;
 	sys_array[system_call](f);
 }

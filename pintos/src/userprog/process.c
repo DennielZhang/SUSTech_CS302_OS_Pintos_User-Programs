@@ -557,7 +557,6 @@ setup_stack(void **esp, char *file_name)
   }
 
   // word align
-  // *esp -= ((unsigned)*esp % 4);
   while ((int) *esp % 4 != 0) {
         *esp -= sizeof(char);
         char x = 0;
