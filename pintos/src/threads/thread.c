@@ -601,22 +601,3 @@ allocate_tid(void)
 /* Offset of `stack' member within `struct thread'.
    if_waited by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof(struct thread, stack);
-
-struct list_elem *
-find_child_proc(tid_t child_tid)
-{
-  ASSERT(intr_get_level() == INTR_OFF);
-
-  struct list_elem *tmp_e;
-
-  for (tmp_e = list_begin(&thread_current()->children_list); tmp_e != list_end(&thread_current()->children_list);
-       tmp_e = list_next(tmp_e))
-  {
-    struct child_process *f = list_entry(tmp_e, struct child_process, child_elem);
-    if (f->tid == child_tid)
-    {
-      return tmp_e;
-    }
-  }
-  return NULL;
-}
