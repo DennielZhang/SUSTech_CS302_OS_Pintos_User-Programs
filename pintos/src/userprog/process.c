@@ -124,7 +124,7 @@ int process_wait(tid_t child_tid)
 
   struct child_process *ch;
 
-  for (tmp_e = list_begin(&thread_current()->children_list); tmp_e != list_end(&thread_current()->children_list);
+  for (tmp_e = list_begin(thread_current()->children_list); tmp_e != list_end(thread_current()->children_list);
        tmp_e = list_next(tmp_e))
   {
     ch = list_entry(tmp_e, struct child_process, child_elem);
@@ -132,13 +132,13 @@ int process_wait(tid_t child_tid)
     {
       if(!ch->if_waited){
           sema_down(&ch->wait_sema);
-          ch->if_waited = true;
+          ch->if_waited=true;
           break;
       }else return -1;
     }
   }
   
-  if(tmp_e==list_end(&thread_current()->children_list)){
+  if(tmp_e==list_end(thread_current()->children_list)){
     return -1;
   }
   thread_current()->waiting_child = ch;
