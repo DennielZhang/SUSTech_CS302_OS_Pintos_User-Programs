@@ -53,7 +53,7 @@ process_execute (const char *file_name)
   char *save_ptr;
   real_name = malloc(strlen(file_name)+1);
   strlcpy (real_name, file_name, strlen(file_name)+1);
-  thread_name = strtok_r (real_name," ",&save_ptr);  // get the thread name
+  real_name = strtok_r (real_name," ",&save_ptr);  // get the thread name
   /* Create a new thread to execute FILE_NAME. */
 
   tid = thread_create (real_name, PRI_DEFAULT, start_process, fn_copy);
