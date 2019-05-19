@@ -341,7 +341,7 @@ void syscall_close(struct intr_frame *f)
 	get_content(f->esp, &fd, 1);
 
 	lock_acquire(&filesys_lock);
-	close_single_file(&thread_current()->opened_files, fd));
+	close_single_file(&thread_current()->opened_files, fd);
 	lock_release(&filesys_lock);
 }
 
