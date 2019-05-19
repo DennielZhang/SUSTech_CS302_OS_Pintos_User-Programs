@@ -156,22 +156,26 @@ process_exit (void)
 
   printf("%s: exit(%d)\n",current_thread->name,exit_status);
 
-  // if (lock_held_by_current_thread(&filesys_lock))
-  // {
-  //   lock_release(&filesys_lock);
-  // }
-
-  // enum intr_level old_level = intr_disable();
   lock_acquire(&filesys_lock);
-  clean_all_files(&current_thread->opened_files);
+  struct list* files = &current_thread->opened_files;
+  struct process_file *proc_f;
+
+	while(!list_empty(files))
+	{
+		proc_f = list_entry (list_pop_front(files), struct process_file, elem);
+		file_close(proc_f->ptr);
+		list_remove(&proc_f->elem);
+		free(proc_f);
+	}
+
   file_close(current_thread->self);
-  struct list_elem *elem_pop;
-  while(!list_empty(&thread_current()->children_list))
-  {
-    elem_pop = list_pop_front(&thread_current()->children_list);
-    struct process_file *f = list_entry (elem_pop, struct child_process, child_elem);
-    free(f);
-  }
+  // struct list_elem *elem_pop;
+  // while(!list_empty(&thread_current()->children_list))
+  // {
+  //   elem_pop = list_pop_front(&thread_current()->children_list);
+  //   struct process_file *f = list_entry (elem_pop, struct child_process, child_elem);
+  //   free(f);
+  // }
   lock_release(&filesys_lock);
   // intr_set_level(old_level);
   // printf("closed all\n");
