@@ -536,7 +536,7 @@ setup_stack(void **esp, char *file_name)
   int argc = 0;
   for (token = strtok_r(filename_cp, " ", temp_ptr); token != NULL;
        token = strtok_r(NULL, " ", temp_ptr))
-    (*argc)++;
+    (argc)++;
 
   // int argc = 1;  
   // bool is_lastone_space = false; //keep a record that if the last char is space. for the use of two-space situation
