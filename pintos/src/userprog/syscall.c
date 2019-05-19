@@ -78,9 +78,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 		case SYS_EXIT: pfn[system_call](f); break;
 		case SYS_EXEC: pfn[system_call](f); break;
 		case SYS_WAIT: pfn[system_call](f); break;
-		case SYS_CREATE: f->eax = syscall_creat(f); break;
-		case SYS_REMOVE: f->eax = syscall_remove(f); break;
-		case SYS_OPEN: f->eax = syscall_open(f); break;
+		case SYS_CREATE: pfn[system_call](f); break;
+		case SYS_REMOVE: pfn[system_call](f); break;
+		case SYS_OPEN: pfn[system_call](f); break;
 		case SYS_FILESIZE: f->eax = syscall_filesize(f); break;
 		case SYS_READ: f->eax = syscall_read(f); break;
 		case SYS_WRITE: f->eax = syscall_write(f); break;
@@ -239,7 +239,7 @@ syscall_creat(struct intr_frame *f)
 	lock_acquire(&filesys_lock);
 	ret = filesys_create(name, initial_size);
 	lock_release(&filesys_lock);
-	return ret;
+	f->eax = ret;
 }
 
 int
@@ -259,7 +259,7 @@ syscall_remove(struct intr_frame *f)
 		ret = true;
 	lock_release(&filesys_lock);
 
-	return ret;
+	f->eax = ret;
 }
 
 int
@@ -287,7 +287,7 @@ syscall_open(struct intr_frame *f)
 		list_push_back(&thread_current()->opened_files, &pfile->elem);
 		ret = pfile->fd;
 	}
-	return ret;
+	f->eax = ret;
 }
 
 int
