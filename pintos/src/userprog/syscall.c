@@ -154,14 +154,15 @@ syscall_create(struct intr_frame *f)
 	int ret;
 	off_t initial_size;
 	char *name;
-	is_valid_addr(f->esp+5);
-	is_valid_addr(f->esp+4);
+	is_valid_addr(f->esp+2);
+	is_valid_addr(f->esp+1);
+	is_valid_addr((void *) *(f->esp+1));
 	// pop_stack(f->esp, &initial_size, 5);
 	// pop_stack(f->esp, &name, 4);
-	if (!is_valid_addr(f->esp+4))
-		ret = -1;
+	// if (!is_valid_addr(f->esp+4))
+	// 	ret = -1;
 	lock_acquire(&filesys_lock);
-	ret = filesys_create(f->esp+4, f->esp+5);
+	ret = filesys_create(f->esp+1, f->esp+2);
 	lock_release(&filesys_lock);
 	f->eax = ret;
 }
