@@ -132,7 +132,7 @@ int process_wait(tid_t child_tid)
     {
       if(!f->if_waited){
           break;
-      }else return -1
+      }else return -1;
     }
   }
   
