@@ -81,12 +81,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 		case SYS_CREATE: pfn[system_call](f); break;
 		case SYS_REMOVE: pfn[system_call](f); break;
 		case SYS_OPEN: pfn[system_call](f); break;
-		case SYS_FILESIZE: f->eax = syscall_filesize(f); break;
-		case SYS_READ: f->eax = syscall_read(f); break;
-		case SYS_WRITE: f->eax = syscall_write(f); break;
-		case SYS_SEEK: syscall_seek(f); break;
-		case SYS_TELL: f->eax = syscall_tell(f); break;
-		case SYS_CLOSE: syscall_close(f); break;
+		case SYS_FILESIZE: pfn[system_call](f); break;
+		case SYS_READ: pfn[system_call](f); break;
+		case SYS_WRITE: pfn[system_call](f); break;
+		case SYS_SEEK: pfn[system_call](f); break;
+		case SYS_TELL: pfn[system_call](f); break;
+		case SYS_CLOSE: pfn[system_call](f); break;
 
 		default:
 		printf("Default %d\n",*p);
@@ -301,7 +301,7 @@ syscall_filesize(struct intr_frame *f)
 	ret = file_length (search_fd(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
 
-	return ret;
+	f->eax = ret;
 }
 
 int
@@ -340,7 +340,7 @@ syscall_read(struct intr_frame *f)
 		}
 	}
 
-	return ret;
+	f->eax = ret;
 }
 
 int
@@ -379,7 +379,7 @@ syscall_write(struct intr_frame *f)
 		}
 	}
 
-	return ret;
+	f->eax = ret;
 }
 
 void
@@ -406,7 +406,7 @@ syscall_tell(struct intr_frame *f)
 	ret = file_tell(search_fd(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
 
-	return ret;
+	f->eax= ret;
 }
 
 void
