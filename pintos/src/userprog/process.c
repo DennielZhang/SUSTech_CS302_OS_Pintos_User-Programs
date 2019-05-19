@@ -41,8 +41,9 @@ tid_t
 process_execute (const char *file_name)
 {
   char *fn_copy;  // a copy of file_name
-  char *real_name;  
+  char *thread_name;  
   tid_t tid;
+  struct thread * current_thread = thread_current();
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -51,23 +52,23 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
   char *save_ptr;
-  real_name = malloc(strlen(file_name)+1);
-  strlcpy (real_name, file_name, strlen(file_name)+1);
-  real_name = strtok_r (real_name," ",&save_ptr);  // get the thread name
+  thread_name = malloc(strlen(file_name)+1);
+  strlcpy (thread_name, file_name, strlen(file_name)+1);
+  thread_name = strtok_r (thread_name," ",&save_ptr);  // get the thread name
   /* Create a new thread to execute FILE_NAME. */
+  //printf("%d\n", current_thread->tid);
+  tid = thread_create (thread_name, PRI_DEFAULT, start_process, fn_copy);
+  free(thread_name);   //free the file name created by malloc mannually
+  if (tid == TID_ERROR)
+    palloc_free_page (fn_copy);
+  else
+  { 
+    sema_down(&thread_current()->load_sema);   //keep the thread waiting until start_process() exits.
+    if (!thread_current()->load_success)  //if the child process is not loaded successfully
+      return -1;   
 
-  tid = thread_create (real_name, PRI_DEFAULT, start_process, fn_copy);
-  free(real_name);   //free the file name created by malloc mannually
-  if (tid == TID_ERROR){
-    free(fn_copy);
-    return tid;
   }
-  sema_down(& thread_current()->load_sema);   //keep the thread waiting until start_process() exits.
-  if (! thread_current()->load_success)  //if the child process is not loaded successfully
-    return TID_ERROR;   
-
-
-  
+  return tid;
 }
 
 /* A thread function that loads a user process and starts it
