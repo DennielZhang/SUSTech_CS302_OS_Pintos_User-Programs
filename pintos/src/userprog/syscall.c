@@ -156,7 +156,7 @@ syscall_create(struct intr_frame *f)
 	char *name;
 	is_valid_addr(f->esp+2);
 	is_valid_addr(f->esp+1);
-	is_valid_addr((void *) *(f->esp+1));
+	// is_valid_addr((void *) *(f->esp+1));
 	// pop_stack(f->esp, &initial_size, 5);
 	// pop_stack(f->esp, &name, 4);
 	// if (!is_valid_addr(f->esp+4))
