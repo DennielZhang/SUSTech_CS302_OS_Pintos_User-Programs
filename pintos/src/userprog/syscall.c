@@ -19,16 +19,16 @@ void clean_single_file(struct list* files, int fd);
 
 
 void syscall_exit(struct intr_frame *f);
-int syscall_exec(struct intr_frame *f);
-int syscall_wait(struct intr_frame *f);
-int syscall_creat(struct intr_frame *f);
-int syscall_remove(struct intr_frame *f);
-int syscall_open(struct intr_frame *f);
-int syscall_filesize(struct intr_frame *f);
-int syscall_read(struct intr_frame *f);
-int syscall_write(struct intr_frame *f);
+void syscall_exec(struct intr_frame *f);
+void syscall_wait(struct intr_frame *f);
+void syscall_creat(struct intr_frame *f);
+void syscall_remove(struct intr_frame *f);
+void syscall_open(struct intr_frame *f);
+void syscall_filesize(struct intr_frame *f);
+void syscall_read(struct intr_frame *f);
+void syscall_write(struct intr_frame *f);
 void syscall_seek(struct intr_frame *f);
-int syscall_tell(struct intr_frame *f);
+void syscall_tell(struct intr_frame *f);
 void syscall_close(struct intr_frame *f);
 void syscall_halt(struct intr_frame *f);
 #define MAXCALL 21
@@ -205,7 +205,7 @@ syscall_exit(struct intr_frame *f)
 	exit_process(status);
 }
 
-int
+void
 syscall_exec(struct intr_frame *f)
 {
 	char *file_name = NULL;
@@ -216,7 +216,7 @@ syscall_exec(struct intr_frame *f)
 		f->eax = exec_process(file_name);
 }
 
-int
+void
 syscall_wait(struct intr_frame *f)
 {
 	tid_t child_tid;
@@ -224,7 +224,7 @@ syscall_wait(struct intr_frame *f)
 	f->eax =  process_wait(child_tid);
 }
 
-int
+void
 syscall_creat(struct intr_frame *f)
 {
 	int ret;
@@ -242,7 +242,7 @@ syscall_creat(struct intr_frame *f)
 	f->eax = ret;
 }
 
-int
+void
 syscall_remove(struct intr_frame *f)
 {
 	int ret;
@@ -262,7 +262,7 @@ syscall_remove(struct intr_frame *f)
 	f->eax = ret;
 }
 
-int
+void
 syscall_open(struct intr_frame *f)
 {
 	int ret;
@@ -290,7 +290,7 @@ syscall_open(struct intr_frame *f)
 	f->eax = ret;
 }
 
-int
+void
 syscall_filesize(struct intr_frame *f)
 {
 	int ret;
@@ -304,7 +304,7 @@ syscall_filesize(struct intr_frame *f)
 	f->eax = ret;
 }
 
-int
+void
 syscall_read(struct intr_frame *f)
 {
 	int ret;
@@ -343,7 +343,7 @@ syscall_read(struct intr_frame *f)
 	f->eax = ret;
 }
 
-int
+void
 syscall_write(struct intr_frame *f)
 {
 	int ret;
@@ -395,7 +395,7 @@ syscall_seek(struct intr_frame *f)
 	lock_release(&filesys_lock);
 }
 
-int
+void
 syscall_tell(struct intr_frame *f)
 {
 	int ret;
