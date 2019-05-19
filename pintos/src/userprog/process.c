@@ -129,7 +129,7 @@ int process_wait(tid_t child_tid)
     ch = list_entry(tmp_e, struct child_process, child_elem);
     if (ch->tid == child_tid)
     {
-      breakl
+      break;
     }
   }
   intr_set_level(old_level);
