@@ -171,7 +171,7 @@ syscall_remove(struct intr_frame *f)
 	int ret;
 	char *name;
 
-	pop_stack(f->esp, &name, 1);
+	pop_stack(f->esp, &name, 4);
 	if (!is_valid_addr(name))
 		ret = -1;
 
@@ -190,7 +190,7 @@ syscall_open(struct intr_frame *f)
 	int ret;
 	char *name;
 
-	pop_stack(f->esp, &name, 1);
+	pop_stack(f->esp, &name, 4);
 	if (!is_valid_addr(name))
 		ret = -1;
 
@@ -216,7 +216,7 @@ syscall_filesize(struct intr_frame *f)
 {
 	int ret;
 	int fd;
-	pop_stack(f->esp, &fd, 1);
+	pop_stack(f->esp, &fd, 4);
 
 	lock_acquire(&filesys_lock);
 	ret = file_length (search_fd(&thread_current()->opened_files, fd)->ptr);
@@ -232,9 +232,9 @@ syscall_read(struct intr_frame *f)
 	void *buffer;
 	int fd;
 
-	pop_stack(f->esp, &size, 7);
-	pop_stack(f->esp, &buffer, 6);
-	pop_stack(f->esp, &fd, 5);
+	pop_stack(f->esp, &size, 12);
+	pop_stack(f->esp, &buffer, 8);
+	pop_stack(f->esp, &fd, 4);
 
 	if (!is_valid_addr(buffer))
 		ret = -1;
@@ -270,9 +270,9 @@ syscall_write(struct intr_frame *f)
 	void *buffer;
 	int fd;
 
-	pop_stack(f->esp, &size, 7);
-	pop_stack(f->esp, &buffer, 6);
-	pop_stack(f->esp, &fd, 5);
+	pop_stack(f->esp, &size, 12);
+	pop_stack(f->esp, &buffer, 8);
+	pop_stack(f->esp, &fd, 4);
 
 	if (!is_valid_addr(buffer))
 		ret = -1;
@@ -317,7 +317,7 @@ syscall_tell(struct intr_frame *f)
 {
 	int ret;
 	int fd;
-	pop_stack(f->esp, &fd, 1);
+	pop_stack(f->esp, &fd, 4);
 
 	lock_acquire(&filesys_lock);
 	ret = file_tell(search_fd(&thread_current()->opened_files, fd)->ptr);
@@ -329,7 +329,7 @@ void
 syscall_close(struct intr_frame *f)
 {
 	int fd;
-	pop_stack(f->esp, &fd, 1);
+	pop_stack(f->esp, &fd, 4);
 
 	lock_acquire(&filesys_lock);
 	clean_single_file(&thread_current()->opened_files, fd);
