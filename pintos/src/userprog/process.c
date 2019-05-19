@@ -88,18 +88,15 @@ start_process(void *file_name_)
 
   /* If load failed, quit. */
   palloc_free_page(file_name);
-
-  struct thread *current_thread = thread_current();
-  current_thread->parent->load_success = success;
-
   if (!success)
   {
-
-    /* exit_status now should be INIT_EXIT_STAT handle later,
-    becasuse process start fail, and  exit_status init value is INIT_EXIT_STAT. */
+    thread_current()->parent->load_success = false;
     thread_exit();
+  }else{
+    thread_current()->parent->load_success = true;
   }
-  sema_up(&current_thread->parent->load_sema);
+  /* start successfully*/
+  sema_up(&thread_current()->parent->load_sema);
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
