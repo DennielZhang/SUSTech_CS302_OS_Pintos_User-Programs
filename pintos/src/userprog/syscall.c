@@ -16,9 +16,6 @@ void exit_process(int status);
 void * is_valid_addr(const void *vaddr);
 struct process_file* search_fd(struct list* files, int fd);
 void clean_single_file(struct list* files, int fd);
-// void clean_all_files(struct list* files); // declear in syscall.h used by another c files
-
-
 void syscall_exit(struct intr_frame *f);
 void syscall_exec(struct intr_frame *f);
 void syscall_wait(struct intr_frame *f);
@@ -32,8 +29,6 @@ void syscall_seek(struct intr_frame *f);
 void syscall_tell(struct intr_frame *f);
 void syscall_close(struct intr_frame *f);
 void syscall_halt(struct intr_frame *f);
-
-
 
 void pop_stack(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
@@ -72,32 +67,29 @@ syscall_handler (struct intr_frame *f UNUSED)
   	int system_call = *p;
 	sys_array[system_call](f);
 }
-
 int
 exec_process(char *file_name)
 {
-	int tid;
-	lock_acquire(&filesys_lock);
+	acquire_file_lock()
 	char * name_tmp = malloc (strlen(file_name)+1);
 	strlcpy(name_tmp, file_name, strlen(file_name) + 1);
 
 	char *tmp_ptr;
 	name_tmp = strtok_r(name_tmp, " ", &tmp_ptr);
-
-	struct file *f = filesys_open(name_tmp);  // check whether the file exists. critical to test case "exec-missing"
+	/* check if the file exist*/
+	struct file *f = filesys_open(name_tmp);  
 
 	if (f == NULL)
 	{
-		lock_release(&filesys_lock);
-		tid = -1;
+		release_file_lock();
+		return -1;
 	}
 	else
 	{
 		file_close(f);
-		lock_release(&filesys_lock);
-		tid = process_execute(file_name);
+		release_file_lock();
+		return process_execute(file_name);
 	}
-	return tid;
 }
 
 void
