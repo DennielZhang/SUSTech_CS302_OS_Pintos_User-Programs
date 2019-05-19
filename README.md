@@ -378,3 +378,9 @@ It is the repository for project2 in Operating System
 - Did you re-implement linked list algorithms instead of using the provided list manipulation?
 
   Absolutely not, I used the list provided by pintos/
+
+### Reference
+
+[1] 西安电子科技大学Pintos Project2
+
+[2] CSCI 350: Pintos Guide, Stephen Tsung-Han Sher

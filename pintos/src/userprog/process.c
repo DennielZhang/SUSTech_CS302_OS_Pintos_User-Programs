@@ -19,7 +19,6 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
-
 static thread_func start_process NO_RETURN;
 static bool load(const char *cmdline, void (**eip)(void), void **esp);
 
@@ -57,10 +56,10 @@ tid_t process_execute(const char *file_name)
   real_name = malloc(strlen(file_name) + 1);
   strlcpy(real_name, file_name, strlen(file_name) + 1);
   /* get the thread name*/
-  real_name = strtok_r(real_name, " ", &save_ptr); 
+  real_name = strtok_r(real_name, " ", &save_ptr);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create(real_name, PRI_DEFAULT, start_process, fn_copy);
-  free(real_name); 
+  free(real_name);
   if (tid == TID_ERROR)
   {
     free(fn_copy);
@@ -68,7 +67,7 @@ tid_t process_execute(const char *file_name)
   }
   /* keep it waiting until start()*/
   sema_down(&thread_current()->load_sema);
-  if (!thread_current()->load_success)     
+  if (!thread_current()->load_success)
     return TID_ERROR;
 
   return tid;
@@ -96,7 +95,9 @@ start_process(void *file_name_)
   {
     thread_current()->parent->load_success = false;
     thread_exit();
-  }else{
+  }
+  else
+  {
     thread_current()->parent->load_success = true;
   }
   /* start successfully*/
@@ -129,7 +130,7 @@ int process_wait(tid_t child_tid)
   struct child_process *ch;
   struct list *ls = &thread_current()->children_list;
   /* find the child that we want to wait*/
-  for (tmp_e = list_begin(ls); tmp_e != list_end(ls);tmp_e = list_next(tmp_e))
+  for (tmp_e = list_begin(ls); tmp_e != list_end(ls); tmp_e = list_next(tmp_e))
   {
     ch = list_entry(tmp_e, struct child_process, child_elem);
     if (ch->tid == child_tid)
@@ -138,16 +139,16 @@ int process_wait(tid_t child_tid)
     }
   }
   intr_set_level(old_level);
-  if(tmp_e==list_end(ls)){
+  if (tmp_e == list_end(ls))
+  {
     return -1;
   }
   thread_current()->waiting_child = ch;
   /* has been waited once or has already stopped*/
-  if(!ch->if_waited)
+  if (!ch->if_waited)
     sema_down(&ch->wait_sema);
 
   list_remove(tmp_e);
-  
 
   return ch->exit_status;
 }
@@ -531,19 +532,25 @@ setup_stack(void **esp, char *file_name)
 
   // calculate argc
   enum intr_level old_level = intr_disable();
-  int argc = 1;
-  bool is_lastone_space = false; //keep a record that if the last char is space. for the use of two-space situation
-  for (int j = 0; j != strlen(file_name); j++)
-  {
-    if (file_name[j] == ' ')
-    {
-      if (!is_lastone_space)
-        argc++;
-      is_lastone_space = true;
-    }
-    else
-      is_lastone_space = false;
-  }
+
+  int argc = 0;
+  for (token = strtok_r(filename_cp, " ", temp_ptr); token != NULL;
+       token = strtok_r(NULL, " ", temp_ptr))
+    (*argc)++;
+
+  // int argc = 1;  
+  // bool is_lastone_space = false; //keep a record that if the last char is space. for the use of two-space situation
+  // for (int j = 0; j != strlen(file_name); j++)
+  // {
+  //   if (file_name[j] == ' ')
+  //   {
+  //     if (!is_lastone_space)
+  //       argc++;
+  //     is_lastone_space = true;
+  //   }
+  //   else
+  //     is_lastone_space = false;
+  // }
   intr_set_level(old_level);
   /* allocate memory */
   int *argv = calloc(argc, sizeof(int));
@@ -558,10 +565,11 @@ setup_stack(void **esp, char *file_name)
   }
 
   /* word alignment */
-  while ((int) *esp % 4 != 0) {
-        *esp -= sizeof(char);
-        char x = 0;
-        memcpy(*esp, &x, sizeof(char));
+  while ((int)*esp % 4 != 0)
+  {
+    *esp -= sizeof(char);
+    char x = 0;
+    memcpy(*esp, &x, sizeof(char));
   }
 
   *esp -= sizeof(int);
