@@ -275,8 +275,9 @@ syscall_write(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	// if (!is_valid_addr(buffer))
-	// 	ret = -1;
+	if (!is_valid_addr(buffer))
+		f->eax = -1;
+		return;
 
 	if (fd == 1)
 	{
