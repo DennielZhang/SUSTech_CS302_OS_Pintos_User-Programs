@@ -153,8 +153,8 @@ process_exit (void)
   uint32_t *pd;
 
   int exit_status = current_thread->exit_status;
-  if (exit_status == INIT_EXIT_STAT)
-    exit_process(-1);
+  // if (exit_status == INIT_EXIT_STAT)
+  //   exit_process(-1);
 
 
   printf("%s: exit(%d)\n",current_thread->name,exit_status);
