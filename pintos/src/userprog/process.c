@@ -557,7 +557,7 @@ setup_stack (void **esp, char * file_name)
 
   int i;
   
-  for (i=0,token = strtok_r (file_name, " ", &temp_ptr);token!=NULL, ;token = strtok_r (NULL, " ", &temp_ptr), i++){   
+  for (i=0,token = strtok_r(file_name, " ", &temp_ptr);token!=NULL;token = strtok_r (NULL, " ", &temp_ptr), i++){   
       *esp -= strlen(token) + 1;
       memcpy(*esp,token,strlen(token) + 1);
       argv[i]=*esp;
@@ -577,16 +577,12 @@ setup_stack (void **esp, char * file_name)
     memcpy(*esp,&argv[i],sizeof(int));
   }
 
-  //push argv address
+  /*push argv address*/
   int tmp = *esp;
   *esp-=sizeof(int);
   memcpy(*esp,&tmp,sizeof(int));
-
-  //push argc
   *esp-=sizeof(int);
   memcpy(*esp,&argc,sizeof(int));
-
-  //return address
   *esp-=sizeof(int);
   memcpy(*esp,&argv[argc],sizeof(int));
 
