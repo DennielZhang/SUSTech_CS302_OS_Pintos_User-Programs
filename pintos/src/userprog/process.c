@@ -124,16 +124,8 @@ process_wait (tid_t child_tid)
 
   enum intr_level old_level = intr_disable();
 
-  struct list_elem *tmp_e = NULL;
-  for (tmp_e = list_begin(&thread_current()->children_list); tmp_e != list_end(&thread_current()->children_list);
-       tmp_e = list_next(tmp_e))
-  {
-    struct child_process *f = list_entry(tmp_e, struct child_process, child_elem);
-    if (f->tid == child_tid)
-    {
-      break;
-    }
-  }
+  struct list_elem *tmp_e = find_child_proc(child_tid);
+  
   struct child_process *ch = list_entry (tmp_e, struct child_process, child_elem);
   intr_set_level (old_level);
 
