@@ -8,7 +8,8 @@
 #include "filesys/off_t.h"
 #include "kernel/list.h"
 //#include "devices/shutdown.h"
-
+typedef void (*CALL_PROC)(struct intr_frame*);
+CALL_PROC* sys_array[21];
 static void syscall_handler (struct intr_frame *);
 int exec_process(char *file_name);
 void exit_process(int status);
@@ -31,8 +32,7 @@ void syscall_seek(struct intr_frame *f);
 void syscall_tell(struct intr_frame *f);
 void syscall_close(struct intr_frame *f);
 void syscall_halt(struct intr_frame *f);
-typedef void (*CALL_PROC)(struct intr_frame*);
-CALL_PROC* call_array[21];
+
 
 
 void pop_stack(int *esp, int *a, int offset){
@@ -48,20 +48,20 @@ syscall_init (void)
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
   int i;
   for(i=0;i<MAXCALL;i++)
-    call_array[i]=NULL;
-  call_array[SYS_WRITE]=syscall_write;
-  call_array[SYS_EXIT]=syscall_exit;
-  call_array[SYS_CREATE]=syscall_creat;
-  call_array[SYS_OPEN]=syscall_open;
-  call_array[SYS_CLOSE]=syscall_close;
-  call_array[SYS_READ]=syscall_read;
-  call_array[SYS_FILESIZE]=syscall_filesize;
-  call_array[SYS_EXEC]=syscall_exec;
-  call_array[SYS_WAIT]=syscall_wait;
-  call_array[SYS_SEEK]=syscall_seek;
-  call_array[SYS_REMOVE]=syscall_remove;
-  call_array[SYS_TELL]=syscall_tell;
-  call_array[SYS_HALT]=syscall_halt;
+    sys_array[i]=NULL;
+  sys_array[SYS_WRITE]=syscall_write;
+  sys_array[SYS_EXIT]=syscall_exit;
+  sys_array[SYS_CREATE]=syscall_creat;
+  sys_array[SYS_OPEN]=syscall_open;
+  sys_array[SYS_CLOSE]=syscall_close;
+  sys_array[SYS_READ]=syscall_read;
+  sys_array[SYS_FILESIZE]=syscall_filesize;
+  sys_array[SYS_EXEC]=syscall_exec;
+  sys_array[SYS_WAIT]=syscall_wait;
+  sys_array[SYS_SEEK]=syscall_seek;
+  sys_array[SYS_REMOVE]=syscall_remove;
+  sys_array[SYS_TELL]=syscall_tell;
+  sys_array[SYS_HALT]=syscall_halt;
 }
 
 static void
@@ -70,7 +70,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   	int *p = f->esp;
 	is_valid_addr(p);
   	int system_call = *p;
-	call_array[system_call](f);
+	sys_array[system_call](f);
 }
 
 int
