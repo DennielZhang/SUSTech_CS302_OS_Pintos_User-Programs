@@ -134,7 +134,7 @@ process_wait (tid_t child_tid)
       break;
     }
   }
-  return NULL;
+
 
   
   intr_set_level (old_level);
