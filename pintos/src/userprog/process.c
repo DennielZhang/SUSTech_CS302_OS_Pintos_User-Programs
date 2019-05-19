@@ -27,7 +27,12 @@ static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
 extern struct list all_list;
-
+void release_file_lock(){
+  lock_release(&filesys_lock);
+}
+void acquire_file_lock(){
+  lock_acquire(&filesys_lock);
+}
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
@@ -156,7 +161,7 @@ process_exit (void)
 
   printf("%s: exit(%d)\n",current_thread->name,exit_status);
 
-  lock_acquire(&filesys_lock);
+  acquire_file_lock();
   struct list* files = &current_thread->opened_files;
   struct process_file *proc_f;
   struct list_elem *e;
@@ -170,7 +175,8 @@ process_exit (void)
 	}
 
   file_close(current_thread->self);
-  lock_release(&filesys_lock);
+  release_file_lock();
+
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -289,7 +295,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   bool success = false;
   int i;
 
-  lock_acquire(&filesys_lock);
+  acquire_file_lock();
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create();
   if (t->pagedir == NULL)
@@ -394,7 +400,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
 done:
   /* We arrive here whether the load is successful or not. */
-  lock_release(&filesys_lock);
+  release_file_lock();
   return success;
 }
 
