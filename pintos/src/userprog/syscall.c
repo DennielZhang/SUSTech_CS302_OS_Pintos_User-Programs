@@ -16,16 +16,10 @@ void exit_process(int status);
 void * is_valid_addr(const void *vaddr);
 struct process_file* search_fd(struct list* files, int fd);
 void clean_single_file(struct list* files, int fd);
-
-
 void pop_stack(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
 	*a = *((int *)is_valid_addr(tmp_esp + offset));
 }
-void syscall_halt(struct intr_frame *f ){
-	shutdown_power_off();
-}
-
 int
 exec_process(char *file_name)
 {
@@ -126,6 +120,10 @@ clean_all_files(struct list* files)
 	}
 }
 
+/* handlers for system calls */
+void syscall_halt(struct intr_frame *f ){
+	shutdown_power_off();
+}
 void
 syscall_exit(struct intr_frame *f)
 {
@@ -133,7 +131,6 @@ syscall_exit(struct intr_frame *f)
 	pop_stack(f->esp, &status, 1);
 	exit_process(status);
 }
-
 void
 syscall_exec(struct intr_frame *f)
 {
@@ -144,7 +141,6 @@ syscall_exec(struct intr_frame *f)
 	else
 		f->eax = exec_process(file_name);
 }
-
 void
 syscall_wait(struct intr_frame *f)
 {
@@ -152,9 +148,8 @@ syscall_wait(struct intr_frame *f)
 	pop_stack(f->esp, &child_tid, 1);
 	f->eax =  process_wait(child_tid);
 }
-
 void
-syscall_creat(struct intr_frame *f)
+syscall_create(struct intr_frame *f)
 {
 	int ret;
 	off_t initial_size;
@@ -170,7 +165,6 @@ syscall_creat(struct intr_frame *f)
 	lock_release(&filesys_lock);
 	f->eax = ret;
 }
-
 void
 syscall_remove(struct intr_frame *f)
 {
@@ -190,7 +184,6 @@ syscall_remove(struct intr_frame *f)
 
 	f->eax = ret;
 }
-
 void
 syscall_open(struct intr_frame *f)
 {
@@ -218,7 +211,6 @@ syscall_open(struct intr_frame *f)
 	}
 	f->eax = ret;
 }
-
 void
 syscall_filesize(struct intr_frame *f)
 {
@@ -232,7 +224,6 @@ syscall_filesize(struct intr_frame *f)
 
 	f->eax = ret;
 }
-
 void
 syscall_read(struct intr_frame *f)
 {
@@ -271,7 +262,6 @@ syscall_read(struct intr_frame *f)
 
 	f->eax = ret;
 }
-
 void
 syscall_write(struct intr_frame *f)
 {
@@ -310,7 +300,6 @@ syscall_write(struct intr_frame *f)
 
 	f->eax = ret;
 }
-
 void
 syscall_seek(struct intr_frame *f)
 {
@@ -323,7 +312,6 @@ syscall_seek(struct intr_frame *f)
 	file_seek(search_fd(&thread_current()->opened_files, pos)->ptr, fd);
 	lock_release(&filesys_lock);
 }
-
 void
 syscall_tell(struct intr_frame *f)
 {
@@ -337,7 +325,6 @@ syscall_tell(struct intr_frame *f)
 
 	f->eax= ret;
 }
-
 void
 syscall_close(struct intr_frame *f)
 {
@@ -348,7 +335,6 @@ syscall_close(struct intr_frame *f)
 	clean_single_file(&thread_current()->opened_files, fd);
 	lock_release(&filesys_lock);
 }
-
 void
 syscall_init (void)
 {
@@ -358,7 +344,7 @@ syscall_init (void)
     sys_array[i]=NULL;
   sys_array[SYS_WRITE]=syscall_write;
   sys_array[SYS_EXIT]=syscall_exit;
-  sys_array[SYS_CREATE]=syscall_creat;
+  sys_array[SYS_CREATE]=syscall_create;
   sys_array[SYS_OPEN]=syscall_open;
   sys_array[SYS_CLOSE]=syscall_close;
   sys_array[SYS_READ]=syscall_read;
@@ -370,7 +356,6 @@ syscall_init (void)
   sys_array[SYS_TELL]=syscall_tell;
   sys_array[SYS_HALT]=syscall_halt;
 }
-
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
