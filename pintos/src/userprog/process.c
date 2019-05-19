@@ -159,26 +159,18 @@ process_exit (void)
   lock_acquire(&filesys_lock);
   struct list* files = &current_thread->opened_files;
   struct process_file *proc_f;
-
+  struct list_elem *e;
 	while(!list_empty(files))
 	{
-		proc_f = list_entry (list_pop_front(files), struct process_file, elem);
+    e = list_pop_front(files);
+		proc_f = list_entry (e, struct process_file, elem);
 		file_close(proc_f->ptr);
 		list_remove(&proc_f->elem);
 		free(proc_f);
 	}
 
   file_close(current_thread->self);
-  // struct list_elem *elem_pop;
-  // while(!list_empty(&thread_current()->children_list))
-  // {
-  //   elem_pop = list_pop_front(&thread_current()->children_list);
-  //   struct process_file *f = list_entry (elem_pop, struct child_process, child_elem);
-  //   free(f);
-  // }
   lock_release(&filesys_lock);
-  // intr_set_level(old_level);
-  // printf("closed all\n");
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
