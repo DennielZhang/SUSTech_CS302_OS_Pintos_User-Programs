@@ -140,9 +140,6 @@ int process_wait(tid_t child_tid)
 
   if(!ch->if_waited)
     sema_down(&ch->wait_sema);
-    // ch->if_waited=true;
-    // break;
-  // }else return -1;
 
   list_remove(tmp_e);
   
