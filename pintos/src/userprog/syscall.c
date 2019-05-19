@@ -8,25 +8,27 @@
 #include "filesys/off_t.h"
 #include "kernel/list.h"
 //#include "devices/shutdown.h"
-typedef void (*CALL_PROC)(struct intr_frame*);
+typedef void (*CALL_PROC)(struct intr_frame *);
 CALL_PROC sys_array[21];
 
-void * check_address(const void *vaddr);
-void get_content(int *esp, int *a, int offset){
+void *check_address(const void *vaddr);
+
+void get_content(int *esp, int *a, int offset)
+{
 	int *tmp_esp = esp;
 	*a = *((int *)check_address(tmp_esp + offset));
 }
-int
-exec_process(char *file_name)
+
+int exec_process(char *file_name)
 {
 	acquire_file_lock();
-	char * name_tmp = malloc (strlen(file_name)+1);
+	char *name_tmp = malloc(strlen(file_name) + 1);
 	strlcpy(name_tmp, file_name, strlen(file_name) + 1);
 
 	char *tmp_ptr;
 	name_tmp = strtok_r(name_tmp, " ", &tmp_ptr);
 	/* check if the file exist*/
-	struct file *f = filesys_open(name_tmp);  
+	struct file *f = filesys_open(name_tmp);
 
 	if (f == NULL)
 	{
@@ -41,8 +43,8 @@ exec_process(char *file_name)
 	}
 }
 
-void
-exit_process(int status)
+/* exit */
+void exit_process(int status)
 {
 	struct child_process *cp;
 	enum intr_level old_level = intr_disable();
@@ -61,6 +63,7 @@ exit_process(int status)
 	thread_exit();
 }
 
+/* check the address whether valid or not */
 void *
 check_address(const void *vaddr)
 {
@@ -73,10 +76,9 @@ check_address(const void *vaddr)
 	return page_ptr;
 }
 
-  /* Find fd and return process file struct in the list,
-  if not exist return NULL. */
+/* Find fd and return process file struct in the list, if not exist return NULL. */
 struct process_file *
-search_one_file(struct list* files, int fd)
+search_one_file(struct list *files, int fd)
 {
 	struct process_file *f;
 	for (struct list_elem *e = list_begin(files); e != list_end(files); e = list_next(e))
@@ -88,47 +90,47 @@ search_one_file(struct list* files, int fd)
 	return NULL;
 }
 
-  /* close and free specific process files
-  by the given fd in the file list. Firstly,
-  find fd in the list, then remove it. */
-void
-clean_single_file(struct list* files, int fd)
+/* close and free specific process files by the given fd in the file list. Firstly, find fd in the list, then remove it. */
+void clean_single_file(struct list *files, int fd)
 {
-	struct process_file *proc_f = search_one_file(files,fd);
-	if (proc_f != NULL){
-		file_close(proc_f->ptr);
-		list_remove(&proc_f->elem);
-    	free(proc_f);
-	}
-}
-
-  /* close and free all process files in the file list */
-void
-clean_all_files(struct list* files)
-{
-	struct process_file *proc_f;
-	while(!list_empty(files))
+	struct process_file *proc_f = search_one_file(files, fd);
+	if (proc_f != NULL)
 	{
-		proc_f = list_entry (list_pop_front(files), struct process_file, elem);
 		file_close(proc_f->ptr);
 		list_remove(&proc_f->elem);
 		free(proc_f);
 	}
 }
 
-/* handlers for system calls */
-void syscall_halt(struct intr_frame *f ){
+/* close and free all process files in the file list */
+void clean_all_files(struct list *files)
+{
+	struct process_file *proc_f;
+	while (!list_empty(files))
+	{
+		proc_f = list_entry(list_pop_front(files), struct process_file, elem);
+		file_close(proc_f->ptr);
+		list_remove(&proc_f->elem);
+		free(proc_f);
+	}
+}
+
+/* halt */
+void syscall_halt(struct intr_frame *f)
+{
 	shutdown_power_off();
 }
-void
-syscall_exit(struct intr_frame *f)
+
+/* exit */
+void syscall_exit(struct intr_frame *f)
 {
 	int status;
 	get_content(f->esp, &status, 1);
 	exit_process(status);
 }
-void
-syscall_exec(struct intr_frame *f)
+
+/* exec */
+void syscall_exec(struct intr_frame *f)
 {
 	char *file_name = NULL;
 	get_content(f->esp, &file_name, 1);
@@ -137,22 +139,23 @@ syscall_exec(struct intr_frame *f)
 	else
 		f->eax = exec_process(file_name);
 }
-void
-syscall_wait(struct intr_frame *f)
+
+/* wait */
+void syscall_wait(struct intr_frame *f)
 {
 	tid_t child_tid;
 	get_content(f->esp, &child_tid, 1);
-	f->eax =  process_wait(child_tid);
+	f->eax = process_wait(child_tid);
 }
-void
-syscall_create(struct intr_frame *f)
+
+/* create */
+void syscall_create(struct intr_frame *f)
 {
 	int ret;
 	off_t initial_size;
 	char *name;
-	// initial_size = *((int *)check_address(f->esp + 5));
+
 	get_content(f->esp, &initial_size, 5);
-	// name = *((int *)check_address(f->esp + 4));
 	get_content(f->esp, &name, 4);
 	if (!check_address(name))
 		ret = -1;
@@ -162,8 +165,9 @@ syscall_create(struct intr_frame *f)
 	lock_release(&filesys_lock);
 	f->eax = ret;
 }
-void
-syscall_remove(struct intr_frame *f)
+
+/* remove */
+void syscall_remove(struct intr_frame *f)
 {
 	int ret;
 	char *name;
@@ -181,8 +185,9 @@ syscall_remove(struct intr_frame *f)
 
 	f->eax = ret;
 }
-void
-syscall_open(struct intr_frame *f)
+
+/* open the file */
+void syscall_open(struct intr_frame *f)
 {
 	int ret;
 	char *name;
@@ -208,8 +213,9 @@ syscall_open(struct intr_frame *f)
 	}
 	f->eax = ret;
 }
-void
-syscall_filesize(struct intr_frame *f)
+
+/* get the file size */
+void syscall_filesize(struct intr_frame *f)
 {
 	int ret;
 	int fd;
@@ -220,8 +226,9 @@ syscall_filesize(struct intr_frame *f)
 
 	f->eax = ret;
 }
-void
-syscall_read(struct intr_frame *f)
+
+/* read */
+void syscall_read(struct intr_frame *f)
 {
 	int ret;
 	int size;
@@ -232,10 +239,10 @@ syscall_read(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	if (!check_address(buffer)||!check_address(buffer+size))
+	if (!check_address(buffer) || !check_address(buffer + size))
 		ret = -1;
 
-	if (fd == STDIN_FILENO)/* read from std input*/
+	if (fd == STDIN_FILENO) /* read from std input*/
 	{
 		int i;
 		uint8_t *buffer = buffer;
@@ -258,8 +265,9 @@ syscall_read(struct intr_frame *f)
 
 	f->eax = ret;
 }
-void
-syscall_write(struct intr_frame *f)
+
+/* write */
+void syscall_write(struct intr_frame *f)
 {
 	int ret;
 	int size;
@@ -270,19 +278,20 @@ syscall_write(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	if (!check_address(buffer) || !check_address(buffer+size))
+	if (!check_address(buffer) || !check_address(buffer + size))
 		ret = -1;
 
-	if (fd == 1)
+	if (fd == 1) /* write to stdout */
 	{
 		putbuf(buffer, size);
 		ret = size;
 	}
 	else
 	{
+		/* write to file */
 		enum intr_level old_level = intr_disable();
 		struct process_file *pf = search_one_file(&thread_current()->opened_files, fd);
-		intr_set_level (old_level);
+		intr_set_level(old_level);
 
 		if (pf == NULL)
 			ret = -1;
@@ -296,8 +305,9 @@ syscall_write(struct intr_frame *f)
 
 	f->eax = ret;
 }
-void
-syscall_seek(struct intr_frame *f)
+
+/* seek */
+void syscall_seek(struct intr_frame *f)
 {
 	int fd;
 	int pos;
@@ -308,8 +318,9 @@ syscall_seek(struct intr_frame *f)
 	file_seek(search_one_file(&thread_current()->opened_files, pos)->ptr, fd);
 	lock_release(&filesys_lock);
 }
-void
-syscall_tell(struct intr_frame *f)
+
+/* tell */
+void syscall_tell(struct intr_frame *f)
 {
 	int ret;
 	int fd;
@@ -319,10 +330,11 @@ syscall_tell(struct intr_frame *f)
 	ret = file_tell(search_one_file(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
 
-	f->eax= ret;
+	f->eax = ret;
 }
-void
-syscall_close(struct intr_frame *f)
+
+/* close */
+void syscall_close(struct intr_frame *f)
 {
 	int fd;
 	get_content(f->esp, &fd, 1);
@@ -331,32 +343,35 @@ syscall_close(struct intr_frame *f)
 	clean_single_file(&thread_current()->opened_files, fd);
 	lock_release(&filesys_lock);
 }
-void
-syscall_init (void)
-{
-  intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-  int i;
-  for(i=0;i<21;i++)
-    sys_array[i]=NULL;
-  sys_array[SYS_WRITE]=syscall_write;
-  sys_array[SYS_EXIT]=syscall_exit;
-  sys_array[SYS_CREATE]=syscall_create;
-  sys_array[SYS_OPEN]=syscall_open;
-  sys_array[SYS_CLOSE]=syscall_close;
-  sys_array[SYS_READ]=syscall_read;
-  sys_array[SYS_FILESIZE]=syscall_filesize;
-  sys_array[SYS_EXEC]=syscall_exec;
-  sys_array[SYS_WAIT]=syscall_wait;
-  sys_array[SYS_SEEK]=syscall_seek;
-  sys_array[SYS_REMOVE]=syscall_remove;
-  sys_array[SYS_TELL]=syscall_tell;
-  sys_array[SYS_HALT]=syscall_halt;
-}
+
+/* syscall handler*/
 static void
-syscall_handler (struct intr_frame *f UNUSED)
+syscall_handler(struct intr_frame *f UNUSED)
 {
-  	int *p = f->esp;
+	int *p = f->esp;
 	check_address(p);
-  	int system_call = *p;
+	int system_call = *p;
 	sys_array[system_call](f);
+}
+
+/* initialize the syscall array*/
+void syscall_init(void)
+{
+	intr_register_int(0x30, 3, INTR_ON, syscall_handler, "syscall");
+	int i;
+	for (i = 0; i < 21; i++)
+		sys_array[i] = NULL;
+	sys_array[SYS_WRITE] = syscall_write;
+	sys_array[SYS_EXIT] = syscall_exit;
+	sys_array[SYS_CREATE] = syscall_create;
+	sys_array[SYS_OPEN] = syscall_open;
+	sys_array[SYS_CLOSE] = syscall_close;
+	sys_array[SYS_READ] = syscall_read;
+	sys_array[SYS_FILESIZE] = syscall_filesize;
+	sys_array[SYS_EXEC] = syscall_exec;
+	sys_array[SYS_WAIT] = syscall_wait;
+	sys_array[SYS_SEEK] = syscall_seek;
+	sys_array[SYS_REMOVE] = syscall_remove;
+	sys_array[SYS_TELL] = syscall_tell;
+	sys_array[SYS_HALT] = syscall_halt;
 }
