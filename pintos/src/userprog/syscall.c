@@ -87,7 +87,7 @@ search_one_file(struct list* files, int fd)
 	{
 		f = list_entry(e, struct process_file, elem);
 		if (f->fd == fd)
-			return proc_f;
+			return f;
 	}
 	return NULL;
 }
