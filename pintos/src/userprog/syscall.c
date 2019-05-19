@@ -50,19 +50,19 @@ syscall_init (void)
   int i;
   for(i=0;i<MAXCALL;i++)
     pfn[i]=NULL;
-  pfn[SYS_WRITE]=IWrite;
-  pfn[SYS_EXIT]=IExit;
-  pfn[SYS_CREATE]=ICreate;
-  pfn[SYS_OPEN]=IOpen;
-  pfn[SYS_CLOSE]=IClose;
-  pfn[SYS_READ]=IRead;
-  pfn[SYS_FILESIZE]=IFileSize;
-  pfn[SYS_EXEC]=IExec;
-  pfn[SYS_WAIT]=IWait;
-  pfn[SYS_SEEK]=ISeek;
-  pfn[SYS_REMOVE]=IRemove;
-  pfn[SYS_TELL]=ITell;
-  pfn[SYS_HALT]=IHalt;
+  pfn[SYS_WRITE]=syscall_write;
+  pfn[SYS_EXIT]=syscall_exit;
+  pfn[SYS_CREATE]=syscall_creat;
+  pfn[SYS_OPEN]=syscall_open;
+  pfn[SYS_CLOSE]=syscall_close;
+  pfn[SYS_READ]=syscall_read;
+  pfn[SYS_FILESIZE]=syscall_filesize;
+  pfn[SYS_EXEC]=syscall_exec;
+  pfn[SYS_WAIT]=syscall_wait;
+  pfn[SYS_SEEK]=syscall_seek;
+  pfn[SYS_REMOVE]=syscall_remove;
+  pfn[SYS_TELL]=syscall_tell;
+  pfn[SYS_HALT]=syscall_halt;
 
 }
 
