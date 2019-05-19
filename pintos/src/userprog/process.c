@@ -533,24 +533,19 @@ setup_stack(void **esp, char *file_name)
   // calculate argc
   enum intr_level old_level = intr_disable();
 
-  int argc = 0;
-  for (token = strtok_r(filename_cp, " ", temp_ptr); token != NULL;
-       token = strtok_r(NULL, " ", temp_ptr))
-    (argc)++;
-
-  // int argc = 1;  
-  // bool is_lastone_space = false; //keep a record that if the last char is space. for the use of two-space situation
-  // for (int j = 0; j != strlen(file_name); j++)
-  // {
-  //   if (file_name[j] == ' ')
-  //   {
-  //     if (!is_lastone_space)
-  //       argc++;
-  //     is_lastone_space = true;
-  //   }
-  //   else
-  //     is_lastone_space = false;
-  // }
+  int argc = 1;  
+  bool is_lastone_space = false; //keep a record that if the last char is space. for the use of two-space situation
+  for (int j = 0; j != strlen(file_name); j++)
+  {
+    if (file_name[j] == ' ')
+    {
+      if (!is_lastone_space)
+        argc++;
+      is_lastone_space = true;
+    }
+    else
+      is_lastone_space = false;
+  }
   intr_set_level(old_level);
   /* allocate memory */
   int *argv = calloc(argc, sizeof(int));
