@@ -123,7 +123,7 @@ int process_wait(tid_t child_tid)
   struct list_elem *tmp_e;
 
   struct child_process *ch;
-  struct list *ls = &thread_current()->children_list
+  struct list *ls = &thread_current()->children_list;
   for (tmp_e = list_begin(ls); tmp_e != list_end(ls);tmp_e = list_next(tmp_e))
   {
     ch = list_entry(tmp_e, struct child_process, child_elem);
