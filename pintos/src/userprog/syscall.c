@@ -14,8 +14,7 @@ static void syscall_handler (struct intr_frame *);
 int exec_process(char *file_name);
 void exit_process(int status);
 void * is_valid_addr(const void *vaddr);
-struct process_file*
-search_one_file(struct list* files, int fd);
+struct process_file* search_one_file(struct list* files, int fd);
 void clean_single_file(struct list* files, int fd);
 void get_content(int *esp, int *a, int offset){
 	int *tmp_esp = esp;
@@ -99,8 +98,7 @@ search_one_file(struct list* files, int fd)
 void
 clean_single_file(struct list* files, int fd)
 {
-	struct process_file *proc_f =
-	search_one_file(files,fd);
+	struct process_file *proc_f = search_one_file(files,fd);
 	if (proc_f != NULL){
 		file_close(proc_f->ptr);
 		list_remove(&proc_f->elem);
@@ -222,8 +220,7 @@ syscall_filesize(struct intr_frame *f)
 	get_content(f->esp, &fd, 1);
 
 	lock_acquire(&filesys_lock);
-	ret = file_length 
-	search_one_file(&thread_current()->opened_files, fd)->ptr);
+	ret = file_length(search_one_file(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
 
 	f->eax = ret;
@@ -253,8 +250,7 @@ syscall_read(struct intr_frame *f)
 	}
 	else /* read from file*/
 	{
-		struct process_file *pf =
-		search_one_file(&thread_current()->opened_files, fd);
+		struct process_file *pf = search_one_file(&thread_current()->opened_files, fd);
 		if (pf == NULL)
 			ret = -1;
 		else
@@ -290,8 +286,7 @@ syscall_write(struct intr_frame *f)
 	else
 	{
 		enum intr_level old_level = intr_disable();
-		struct process_file *pf =
-		search_one_file(&thread_current()->opened_files, fd);
+		struct process_file *pf = search_one_file(&thread_current()->opened_files, fd);
 		intr_set_level (old_level);
 
 		if (pf == NULL)
@@ -315,8 +310,7 @@ syscall_seek(struct intr_frame *f)
 	get_content(f->esp, &pos, 4);
 
 	lock_acquire(&filesys_lock);
-	file_seek
-	search_one_file(&thread_current()->opened_files, pos)->ptr, fd);
+	file_seek(search_one_file(&thread_current()->opened_files, pos)->ptr, fd);
 	lock_release(&filesys_lock);
 }
 void
@@ -327,8 +321,7 @@ syscall_tell(struct intr_frame *f)
 	get_content(f->esp, &fd, 1);
 
 	lock_acquire(&filesys_lock);
-	ret = file_tell
-	search_one_file(&thread_current()->opened_files, fd)->ptr);
+	ret = file_tell(search_one_file(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
 
 	f->eax= ret;
