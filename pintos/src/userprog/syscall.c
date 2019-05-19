@@ -230,12 +230,12 @@ syscall_read(struct intr_frame *f)
 {
 	int ret;
 	int size;
-	void *buffer;
+	char *buffer;
 	int fd;
 
-	get_content(f->esp, &size, 7);
-	get_content(f->esp, &buffer, 6);
-	get_content(f->esp, &fd, 5);
+	get_content(f->esp, &size, 12);
+	get_content(f->esp, &buffer, 8);
+	get_content(f->esp, &fd, 4);
 
 	if (!is_valid_addr(buffer))
 		ret = -1;
@@ -268,12 +268,12 @@ syscall_write(struct intr_frame *f)
 {
 	int ret;
 	int size;
-	void *buffer;
+	char *buffer;
 	int fd;
 
-	get_content(f->esp, &size, 7);
-	get_content(f->esp, &buffer, 6);
-	get_content(f->esp, &fd, 5);
+	get_content(f->esp, &size, 12);
+	get_content(f->esp, &buffer, 8);
+	get_content(f->esp, &fd, 4);
 
 	if (!is_valid_addr(buffer))
 		ret = -1;
