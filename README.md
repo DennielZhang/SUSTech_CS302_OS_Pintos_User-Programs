@@ -72,6 +72,8 @@ It is the repository for project2 in Operating System
 
 * Synchronization
 
+  As many threads can not manipulate one file at the same time, so we creted a global lock `filesys_lock` . Any operation with file need to first acquire this.
+
   Here we use 
 
   ```c
@@ -137,53 +139,139 @@ It is the repository for project2 in Operating System
 
 - Algorithms
 
-  **sys_array**
+  * Utility method
 
-  To make the code simple and straightforward, we store all the syscall handler in one array -- `sys_array`. We initialize this array in `syscall_init` like below:
+    * **sys_array**
 
-  ```c
-  sys_array[SYS_WRITE]=syscall_write;
-  ```
+    To make the code simple and straightforward, we store all the syscall handler in one array -- `sys_array`. We initialize this array in `syscall_init` like below:
 
-  **check_address**
+    ```c
+    sys_array[SYS_WRITE]=syscall_write;
+    ```
 
-  All method call this to check if an address. If the virtual address is NULL or it doesn't point to a valid area. This method will terminate current thread. Otherwise, it will return the physical address.
+    * **check_address**
 
-  **get_content**
+    All method call this to check if an address. If the virtual address is NULL or it doesn't point to a valid area. This method will terminate current thread. Otherwise, it will return the physical address.
 
-  All method call this method to get the arguement out of stack.
+    * **get_content**
 
-  * Halt
+    All method call this method to get the arguement out of stack.
 
-    The handler for halt is `syscall_halt`.
+  * Syscall Handlers
+    * **Halt**
 
-    The halt syscall will shutdown the system. So, we just call `shutdown_power_off` to implement it.
+      The handler for halt is `syscall_halt`.
 
-  * Exec
+      The halt syscall will shutdown the system. So, we just call `shutdown_power_off` to implement it.
 
-    The handler for exec is `syscall_exec`.
+    * **Exec**
 
-    The main idea for implementing `Exec` is to create a new child process and bind it with its parent process.
+      The handler for exec is `syscall_exec`.
 
-    In the handler we first get the executed file name and check if it is valid. If valid, we call `exec_process`. In `exec_process`, we first split out the name for the executable and check if the it exist. If exist, we call `process_execute()` in *process.c* to create and run a new process. In `process_execute()`, the modification is mainly used to keep synchronization. A new process is actually a new thread, we create it in `thread_create` and create the corresponding `child_process` for it to be binded with its parent process.
+      The main idea for implementing `Exec` is to create a new child process and bind it with its parent process.
 
-  * Wait
+      In the handler we first get the executed file name and check if it is valid. If valid, we call `exec_process`. In `exec_process`, we first split out the name for the executable and check if the it exist. If exist, we call `process_execute()` in *process.c* to create and run a new process. In `process_execute()`, the modification is mainly used to keep synchronization. A new process is actually a new thread, we create it in `thread_create` and create the corresponding `child_process` for it to be binded with its parent process.
 
-    The handler for wait is `syscall_wait`
+    * **Wait**
 
-    The main idea is that, if a process want to wait for one of its children. This process needs to be blocked until the waited child finished and returned the exit value.
+      The handler for wait is `syscall_wait`
 
-    In `syscall.c`, we first get the child tid that the thread want to wait. Then we call `process_wait` in `process.c` to perform wait. In `process_wait`, we first find the child thread by traverse the `children list` of the current thread to make sure that this is a real child and it is not the second time to wait for it. Then after finding it. We implement the *wait* with semaphore(This will be discussed later). To wait a child, the parent thread need to *down* the semaphore of that child. And, when the child exits, it need to `up` its semaphore if there is one thread is waiting for it.
+      The main idea is that, if a process want to wait for one of its children. This process needs to be blocked until the waited child finished and returned the exit value.
 
-  
+      In `syscall.c`, we first get the child tid that the thread want to wait. Then we call `process_wait` in `process.c` to perform wait. In `process_wait`, we first find the child thread by traverse the `children list` of the current thread to make sure that this is a real child and it is not the second time to wait for it. Then after finding it. We implement the *wait* with semaphore(This will be discussed later). To wait a child, the parent thread need to *down* the semaphore of that child. And, when the child exits, it need to `up` its semaphore if there is one thread is waiting for it.
 
 - Synchronization 
+
+  - **filesys_lock**
+
+    Here also when manipulating files, we acquire the `filesys_lock` first. For example in `exec_process` we need to open the executable file to check its existence. So before we doing this, we first acquire `filesys_lock`.
+
+  - **semaphore**
+
+    Here, we use semaphore on child thread to manipulate the block and unblock procedure of waiting. The parent thread *down* the semaphore when waiting, and the child *up* the semaphore when exiting.
+
+    ```c
+    sema_down(&ch->wait_sema);
+    ​``````````````
+    sema_up(&thread_current()->parent->waiting_child->wait_sema);
+    ```
 
 - Rationale 
 
 ### Task3: File Operation Syscalls
 
-- Data structure
+- Data structure & Function
+
+  * Modified thread.h
+
+    ```c
+    /* added new attributes in thread */
+    struct thread
+    {
+    	...
+        struct list opened_files; /* keep the list of opened files for this thread */
+        int fd_count; /* the amount of fd for this thread */
+    	...
+    }
+    ```
+
+  * Modified syscall.h
+
+    ```c
+    /* added a new structure to store the information for one file in opened_files*/
+    struct process_file {
+    	struct file* ptr;
+    	int fd;
+    	struct list_elem elem;
+    };
+    ```
+
+    Added `syscall_write`, `syscall_create`, `syscall_open`, `syscall_close`, `syscall_read`, `syscall_filesize`, `syscall_seek`, `syscall_remove`, `syscall_tell`, `search_one_file`,`clean_single_file`, `clean_all_files`
+
 - Algorithms
+
+  - Utility Methods
+
+    - **search_one_file**
+
+      search for a file in the opened_file list of a thread
+
+    - **clean_single_file**
+
+      close one file for a thread
+
+    - **clean_all_files**
+
+      close all files for a thread
+
+  - Syscall Handlers
+
+    - **create**
+
+      Its handler is `syscall_create`. It will first get the name and initial_size of the file and then call `filesys_create` to create a file.
+
+    - **write**
+
+      Its handler is `syscall_write`. It will first get the fd, size and buffer information. And according to fd, it will choose where to write(stdout or a file)
+
+    - **open**
+
+      Its handler is `syscall_open`. This syscall will open a file. First it get the file name and check if it is valid. Then it calls `filesys_open` to open the file and get the file pointer. Then it save these information to the current thread(fd_count., opened_files).
+
+    - **remove** 
+
+      
+
+    - **filesize** 
+
+      Its handler is `syscall_filesize`. This syscall will return the size of a file. First it will get the name of a file and 
+
+    - **read**
+
+    - **seek** 
+
+    - **tell**
+
 - Synchronization 
+
 - Rationale 

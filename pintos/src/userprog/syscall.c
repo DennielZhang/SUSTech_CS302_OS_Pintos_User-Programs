@@ -218,7 +218,8 @@ syscall_filesize(struct intr_frame *f)
 	int ret;
 	int fd;
 	get_content(f->esp, &fd, 1);
-
+	if (!check_address(name))
+		ret = -1;
 	lock_acquire(&filesys_lock);
 	ret = file_length(search_one_file(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
