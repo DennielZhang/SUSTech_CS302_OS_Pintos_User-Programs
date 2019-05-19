@@ -129,20 +129,23 @@ int process_wait(tid_t child_tid)
     ch = list_entry(tmp_e, struct child_process, child_elem);
     if (ch->tid == child_tid)
     {
-      if(!ch->if_waited){
-          sema_down(&ch->wait_sema);
-          ch->if_waited=true;
-          break;
-      }else return -1;
+      breakl
     }
   }
-  
+  intr_set_level(old_level);
   if(tmp_e==list_end(ls)){
     return -1;
   }
   thread_current()->waiting_child = ch;
+
+  if(!ch->if_waited)
+    sema_down(&ch->wait_sema);
+    // ch->if_waited=true;
+    // break;
+  // }else return -1;
+
   list_remove(tmp_e);
-  intr_set_level(old_level);
+  
 
   return ch->exit_status;
 }
