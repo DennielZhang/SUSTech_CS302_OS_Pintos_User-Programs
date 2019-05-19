@@ -211,9 +211,9 @@ syscall_exec(struct intr_frame *f)
 	char *file_name = NULL;
 	pop_stack(f->esp, &file_name, 1);
 	if (!is_valid_addr(file_name))
-		return -1;
+		f->esp = -1;
 
-	return exec_process(file_name);
+	f->esp = exec_process(file_name);
 }
 
 int
