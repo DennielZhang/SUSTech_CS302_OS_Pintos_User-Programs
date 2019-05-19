@@ -74,8 +74,8 @@ syscall_handler (struct intr_frame *f UNUSED)
   	int system_call = *p;
 	switch (system_call)
 	{
-		case SYS_HALT: pfn[system_call]; break;
-		case SYS_EXIT: pfn[system_call]; break;
+		case SYS_HALT: pfn[system_call](); break;
+		case SYS_EXIT: pfn[system_call](f); break;
 		case SYS_EXEC: f->eax = syscall_exec(f); break;
 		case SYS_WAIT: f->eax = syscall_wait(f); break;
 		case SYS_CREATE: f->eax = syscall_creat(f); break;
