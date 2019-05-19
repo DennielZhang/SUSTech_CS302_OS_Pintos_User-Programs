@@ -185,7 +185,7 @@ process_exit (void)
     {
       /* Correct ordering here is crucial.  We must set
          current_thread->pagedir to NULL before switching page directories,
-         so that a timer interrupt can'cp_esp switch back to the
+         so that a timer interrupt can't switch back to the
          process page directory.  We must activate the base page
          directory before destroying the process's page
          directory, or our active page directory will be one
@@ -202,10 +202,10 @@ process_exit (void)
 void
 process_activate (void)
 {
-  struct thread *cp_esp = thread_current ();
+  struct thread *t = thread_current ();
 
   /* Activate thread's page tables. */
-  pagedir_activate (cp_esp->pagedir);
+  pagedir_activate (t->pagedir);
 
   /* Set thread's kernel stack for use in processing
      interrupts. */
@@ -288,7 +288,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
 bool
 load (const char *file_name, void (**eip) (void), void **esp)
 {
-  struct thread *cp_esp = thread_current();
+  struct thread *t = thread_current();
   struct Elf32_Ehdr ehdr;
   struct file *file = NULL;
   off_t file_ofs;
@@ -297,20 +297,24 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   acquire_file_lock();
   /* Allocate and activate page directory. */
-  cp_esp->pagedir = pagedir_create();
-  if (cp_esp->pagedir == NULL)
+  t->pagedir = pagedir_create();
+  if (t->pagedir == NULL)
     goto done;
   process_activate();
 
   /* Open executable file. */
 
-  char *cmdd = malloc(strlen(file_name) + 1);
-  strlcpy(cmdd, file_name, strlen(file_name) + 1);
-  char *temp_ptr;
-  cmdd = strtok_r(cmdd, " ", &temp_ptr);
+  char *fn_cp = malloc(strlen(file_name) + 1);
+  strlcpy(fn_cp, file_name, strlen(file_name) + 1);
 
-  file = filesys_open(cmdd);
-  free(cmdd);
+  char *temp_ptr;
+  fn_cp = strtok_r(fn_cp, " ", &temp_ptr);
+
+  file = filesys_open(fn_cp);
+
+  free(fn_cp);
+  //TODO : Free fn_cp
+
   if (file == NULL)
   {
     printf("load: %s: open failed\n", file_name);
@@ -368,7 +372,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
         else
         {
           /* Entirely zero.
-                     Don'cp_esp read anything from disk. */
+                     Don't read anything from disk. */
           read_bytes = 0;
           zero_bytes = ROUND_UP(page_offset + phdr.p_memsz, PGSIZE);
         }
@@ -528,8 +532,10 @@ setup_stack (void **esp, char * file_name)
     }
 
   char *token, *temp_ptr;
-  char * copy_file_name = malloc(strlen(file_name)+1);
-  strlcpy (copy_file_name, file_name, strlen(file_name)+1);
+
+  char * filename_cp = malloc(strlen(file_name)+1);
+  strlcpy (filename_cp, file_name, strlen(file_name)+1);
+
 
   // calculate argc
   enum intr_level old_level = intr_disable();
@@ -550,7 +556,6 @@ setup_stack (void **esp, char * file_name)
   int *argv = calloc(argc,sizeof(int));
 
   int i;
-  
   token = strtok_r (file_name, " ", &temp_ptr);
   for (i=0; ; i++){
     if(token){
@@ -562,8 +567,8 @@ setup_stack (void **esp, char * file_name)
       break;
     }
   }
-  free(token);
-  /* make the word alignment */
+
+  // word align
   *esp -= ((unsigned)*esp % WORD_SIZE);
 
   //null ptr sentinel: null at argv[argc]
@@ -576,15 +581,20 @@ setup_stack (void **esp, char * file_name)
     memcpy(*esp,&argv[i],sizeof(int));
   }
 
-  int cp_esp = *esp;
+  //push argv address
+  int tmp = *esp;
   *esp-=sizeof(int);
-  memcpy(*esp, cp_esp,sizeof(int));
+  memcpy(*esp,&tmp,sizeof(int));
+
+  //push argc
   *esp-=sizeof(int);
   memcpy(*esp,&argc,sizeof(int));
+
+  //return address
   *esp-=sizeof(int);
   memcpy(*esp,&argv[argc],sizeof(int));
 
-  free(copy_file_name);
+  free(filename_cp);
   free(argv);
 
   return success;
