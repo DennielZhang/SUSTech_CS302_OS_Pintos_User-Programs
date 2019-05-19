@@ -82,7 +82,7 @@ check_address(const void *vaddr)
 
 /* Find fd and return process file struct in the list, if not exist return NULL. */
 struct process_file *
-search_one_file(struct list *files, int fd)
+find_one_file(struct list *files, int fd)
 {
 	struct process_file *f;
 	for (struct list_elem *e = list_begin(files); e != list_end(files); e = list_next(e))
@@ -95,9 +95,9 @@ search_one_file(struct list *files, int fd)
 }
 
 /* close and free specific process files by the given fd in the file list. Firstly, find fd in the list, then remove it. */
-void clean_single_file(struct list *files, int fd)
+void close_single_file(struct list *files, int fd)
 {
-	struct process_file *proc_f = search_one_file(files, fd);
+	struct process_file *proc_f = find_one_file(files, fd);
 	if (proc_f != NULL)
 	{
 		file_close(proc_f->ptr);
@@ -107,15 +107,15 @@ void clean_single_file(struct list *files, int fd)
 }
 
 /* close and free all process files in the file list */
-void clean_all_files(struct list *files)
+void close_all_files(struct list *files)
 {
-	struct process_file *proc_f;
+	struct process_file *f;
 	while (!list_empty(files))
 	{
-		proc_f = list_entry(list_pop_front(files), struct process_file, elem);
-		file_close(proc_f->ptr);
-		list_remove(&proc_f->elem);
-		free(proc_f);
+		f = list_entry(list_pop_front(files), struct process_file, elem);
+		file_close(f->ptr);
+		list_remove(&f->elem);
+		free(f);
 	}
 }
 
@@ -136,12 +136,12 @@ void syscall_exit(struct intr_frame *f)
 /* exec */
 void syscall_exec(struct intr_frame *f)
 {
-	char *file_name = NULL;
-	get_content(f->esp, &file_name, 1);
-	if (!check_address(file_name))
+	char *f_name = NULL;
+	get_content(f->esp, &f_name, 1);
+	if (!check_address(f_name))
 		f->eax = -1;
 	else
-		f->eax = exec_process(file_name);
+		f->eax = exec_process(f_name);
 }
 
 /* wait */
@@ -150,6 +150,57 @@ void syscall_wait(struct intr_frame *f)
 	tid_t child_tid;
 	get_content(f->esp, &child_tid, 1);
 	f->eax = process_wait(child_tid);
+}
+/* get the file size */
+void syscall_filesize(struct intr_frame *f)
+{
+	int ret;
+	int fd;
+	get_content(f->esp, &fd, 1);
+	lock_acquire(&filesys_lock);
+	ret = file_length(find_one_file(&thread_current()->opened_files, fd)->ptr);
+	lock_release(&filesys_lock);
+
+	f->eax = ret;
+}
+
+/* read */
+void syscall_read(struct intr_frame *f)
+{
+	int ret;
+	int size;
+	void *buffer;
+	int fd;
+
+	get_content(f->esp, &size, 7);
+	get_content(f->esp, &buffer, 6);
+	get_content(f->esp, &fd, 5);
+
+	if (!check_address(buffer) || !check_address(buffer + size))
+		ret = -1;
+
+	if (fd == STDIN_FILENO) /* read from std input*/
+	{
+		int i;
+		uint8_t *buffer = buffer;
+		for (i = 0; i < size; i++)
+			buffer[i] = input_getc();
+		ret = size;
+	}
+	else /* read from file*/
+	{
+		struct process_file *pf = find_one_file(&thread_current()->opened_files, fd);
+		if (pf == NULL)
+			ret = -1;
+		else
+		{
+			lock_acquire(&filesys_lock);
+			ret = file_read(pf->ptr, buffer, size);
+			lock_release(&filesys_lock);
+		}
+	}
+
+	f->eax = ret;
 }
 
 /* create */
@@ -181,10 +232,7 @@ void syscall_remove(struct intr_frame *f)
 		ret = -1;
 
 	lock_acquire(&filesys_lock);
-	if (filesys_remove(name) == NULL)
-		ret = false;
-	else
-		ret = true;
+	ret = !(filesys_remove(name) == NULL);
 	lock_release(&filesys_lock);
 
 	f->eax = ret;
@@ -218,57 +266,6 @@ void syscall_open(struct intr_frame *f)
 	f->eax = ret;
 }
 
-/* get the file size */
-void syscall_filesize(struct intr_frame *f)
-{
-	int ret;
-	int fd;
-	get_content(f->esp, &fd, 1);
-	lock_acquire(&filesys_lock);
-	ret = file_length(search_one_file(&thread_current()->opened_files, fd)->ptr);
-	lock_release(&filesys_lock);
-
-	f->eax = ret;
-}
-
-/* read */
-void syscall_read(struct intr_frame *f)
-{
-	int ret;
-	int size;
-	void *buffer;
-	int fd;
-
-	get_content(f->esp, &size, 7);
-	get_content(f->esp, &buffer, 6);
-	get_content(f->esp, &fd, 5);
-
-	if (!check_address(buffer) || !check_address(buffer + size))
-		ret = -1;
-
-	if (fd == STDIN_FILENO) /* read from std input*/
-	{
-		int i;
-		uint8_t *buffer = buffer;
-		for (i = 0; i < size; i++)
-			buffer[i] = input_getc();
-		ret = size;
-	}
-	else /* read from file*/
-	{
-		struct process_file *pf = search_one_file(&thread_current()->opened_files, fd);
-		if (pf == NULL)
-			ret = -1;
-		else
-		{
-			lock_acquire(&filesys_lock);
-			ret = file_read(pf->ptr, buffer, size);
-			lock_release(&filesys_lock);
-		}
-	}
-
-	f->eax = ret;
-}
 
 /* write */
 void syscall_write(struct intr_frame *f)
@@ -294,7 +291,7 @@ void syscall_write(struct intr_frame *f)
 	{
 		/* write to file */
 		enum intr_level old_level = intr_disable();
-		struct process_file *pf = search_one_file(&thread_current()->opened_files, fd);
+		struct process_file *pf = find_one_file(&thread_current()->opened_files, fd);
 		intr_set_level(old_level);
 
 		if (pf == NULL)
@@ -319,7 +316,7 @@ void syscall_seek(struct intr_frame *f)
 	get_content(f->esp, &pos, 4);
 
 	lock_acquire(&filesys_lock);
-	file_seek(search_one_file(&thread_current()->opened_files, pos)->ptr, fd);
+	file_seek(find_one_file(&thread_current()->opened_files, pos)->ptr, fd);
 	lock_release(&filesys_lock);
 }
 
@@ -331,7 +328,7 @@ void syscall_tell(struct intr_frame *f)
 	get_content(f->esp, &fd, 1);
 
 	lock_acquire(&filesys_lock);
-	ret = file_tell(search_one_file(&thread_current()->opened_files, fd)->ptr);
+	ret = file_tell(find_one_file(&thread_current()->opened_files, fd)->ptr);
 	lock_release(&filesys_lock);
 
 	f->eax = ret;
@@ -343,8 +340,7 @@ void syscall_close(struct intr_frame *f)
 	int fd;
 	get_content(f->esp, &fd, 1);
 
-	lock_acquire(&filesys_lock);
-	clean_single_file(&thread_current()->opened_files, fd);
+	lock_acquire(&filesys_lockremove(&thread_current()->opened_files, fd);
 	lock_release(&filesys_lock);
 }
 

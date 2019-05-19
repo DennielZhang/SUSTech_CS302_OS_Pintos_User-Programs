@@ -161,6 +161,7 @@ It is the repository for project2 in Operating System
     All method call this method to get the arguement out of stack.
 
   * Syscall Handlers
+
     * **Halt**
 
       The handler for halt is `syscall_halt`.
@@ -247,21 +248,21 @@ It is the repository for project2 in Operating System
     };
     ```
 
-    Added `syscall_write`, `syscall_create`, `syscall_open`, `syscall_close`, `syscall_read`, `syscall_filesize`, `syscall_seek`, `syscall_remove`, `syscall_tell`, `search_one_file`,`clean_single_file`, `clean_all_files`
+    Added `syscall_write`, `syscall_create`, `syscall_open`, `syscall_close`, `syscall_read`, `syscall_filesize`, `syscall_seek`, `syscall_remove`, `syscall_tell`, `find_one_file`,`close_single_file`, `close_all_files`
 
 - Algorithms
 
   - Utility Methods
 
-    - **search_one_file**
+    - **find_one_file**
 
       search for a file in the opened_file list of a thread
 
-    - **clean_single_file**
+    - **close_single_file**
 
       close one file for a thread
 
-    - **clean_all_files**
+    - **close_all_files**
 
       close all files for a thread
 
@@ -301,7 +302,7 @@ It is the repository for project2 in Operating System
 
     - **close**
 
-      Its handler is `syscall_close`. This syscall will close one file for a thread. It get the file descriptor and use `clean_single_file` to close it.
+      Its handler is `syscall_close`. This syscall will close one file for a thread. It get the file descriptor and use `close_single_file` to close it.
 
 - Synchronization 
 
