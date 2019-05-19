@@ -31,8 +31,8 @@ void syscall_seek(struct intr_frame *f);
 void syscall_tell(struct intr_frame *f);
 void syscall_close(struct intr_frame *f);
 void syscall_halt(struct intr_frame *f);
-
-struct intr_frame* call_array[21];
+typedef void (*CALL_PROC)(struct intr_frame*);
+CALL_PROC* call_array[21];
 
 
 void pop_stack(int *esp, int *a, int offset){
