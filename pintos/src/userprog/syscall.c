@@ -82,11 +82,11 @@ is_valid_addr(const void *vaddr)
 struct process_file *
 search_one_file(struct list* files, int fd)
 {
-	struct process_file *proc_f;
+	struct process_file *f;
 	for (struct list_elem *e = list_begin(files); e != list_end(files); e = list_next(e))
 	{
-		proc_f = list_entry(e, struct process_file, elem);
-		if (proc_f->fd == fd)
+		f = list_entry(e, struct process_file, elem);
+		if (f->fd == fd)
 			return proc_f;
 	}
 	return NULL;
@@ -203,12 +203,12 @@ syscall_open(struct intr_frame *f)
 		ret = -1;
 	else
 	{
-		struct process_file *pfile = malloc(sizeof(*pfile));
-		pfile->ptr = fptr;
-		pfile->fd = thread_current()->fd_count;
+		struct process_file *pf = malloc(sizeof(*pf));
+		pf->ptr = fptr;
+		pf->fd = thread_current()->fd_count;
 		thread_current()->fd_count++;
-		list_push_back(&thread_current()->opened_files, &pfile->elem);
-		ret = pfile->fd;
+		list_push_back(&thread_current()->opened_files, &pf->elem);
+		ret = pf->fd;
 	}
 	f->eax = ret;
 }
