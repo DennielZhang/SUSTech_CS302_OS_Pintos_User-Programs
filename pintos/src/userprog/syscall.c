@@ -31,7 +31,9 @@ void syscall_seek(struct intr_frame *f);
 int syscall_tell(struct intr_frame *f);
 void syscall_close(struct intr_frame *f);
 void syscall_halt(void);
-
+#define MAXCALL 21
+typedef void (*CALL_PROC)(struct intr_frame*);
+CALL_PROC pfn[MAXCALL];
 
 
 void pop_stack(int *esp, int *a, int offset){
@@ -45,6 +47,23 @@ void
 syscall_init (void)
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+  int i;
+  for(i=0;i<MAXCALL;i++)
+    pfn[i]=NULL;
+  pfn[SYS_WRITE]=IWrite;
+  pfn[SYS_EXIT]=IExit;
+  pfn[SYS_CREATE]=ICreate;
+  pfn[SYS_OPEN]=IOpen;
+  pfn[SYS_CLOSE]=IClose;
+  pfn[SYS_READ]=IRead;
+  pfn[SYS_FILESIZE]=IFileSize;
+  pfn[SYS_EXEC]=IExec;
+  pfn[SYS_WAIT]=IWait;
+  pfn[SYS_SEEK]=ISeek;
+  pfn[SYS_REMOVE]=IRemove;
+  pfn[SYS_TELL]=ITell;
+  pfn[SYS_HALT]=IHalt;
+
 }
 
 static void
