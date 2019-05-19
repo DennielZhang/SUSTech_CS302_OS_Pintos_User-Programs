@@ -70,7 +70,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 int
 exec_process(char *file_name)
 {
-	acquire_file_lock()
+	acquire_file_lock();
 	char * name_tmp = malloc (strlen(file_name)+1);
 	strlcpy(name_tmp, file_name, strlen(file_name) + 1);
 
