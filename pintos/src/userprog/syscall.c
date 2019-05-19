@@ -72,25 +72,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 	is_valid_addr(p);
 
   	int system_call = *p;
-	switch (system_call)
-	{
-		case SYS_HALT: pfn[system_call](f); break;
-		case SYS_EXIT: pfn[system_call](f); break;
-		case SYS_EXEC: pfn[system_call](f); break;
-		case SYS_WAIT: pfn[system_call](f); break;
-		case SYS_CREATE: pfn[system_call](f); break;
-		case SYS_REMOVE: pfn[system_call](f); break;
-		case SYS_OPEN: pfn[system_call](f); break;
-		case SYS_FILESIZE: pfn[system_call](f); break;
-		case SYS_READ: pfn[system_call](f); break;
-		case SYS_WRITE: pfn[system_call](f); break;
-		case SYS_SEEK: pfn[system_call](f); break;
-		case SYS_TELL: pfn[system_call](f); break;
-		case SYS_CLOSE: pfn[system_call](f); break;
-
-		default:
-		printf("Default %d\n",*p);
-	}
+	pfn[system_call](f);
+	
 }
 
 int
