@@ -153,17 +153,13 @@ process_exit (void)
   uint32_t *pd;
 
   int exit_status = current_thread->exit_status;
-  // if (exit_status == INIT_EXIT_STAT)
-  //   exit_process(-1);
-
 
   printf("%s: exit(%d)\n",current_thread->name,exit_status);
 
-  if (lock_held_by_current_thread(&filesys_lock))
-  {
-    //printf("release_filesys_lock\n"); // for debug.
-    lock_release(&filesys_lock);
-  }
+  // if (lock_held_by_current_thread(&filesys_lock))
+  // {
+  //   lock_release(&filesys_lock);
+  // }
 
   // enum intr_level old_level = intr_disable();
   lock_acquire(&filesys_lock);
