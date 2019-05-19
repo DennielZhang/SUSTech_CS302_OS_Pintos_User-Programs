@@ -1,6 +1,4 @@
 # Report 
-It is the repository for project2 in Operating System
-
 ### Task1: Argument Passing
 
 * Data structure & Function
@@ -84,6 +82,8 @@ It is the repository for project2 in Operating System
   to make sure there is only one process manipulate a file at one time.
 
 * Rationale  
+
+  This part is relatively easy and the logic for arguement parsing is straightforward. So our algorithm is ok to handle it.
 
 ### Task2: Process Control Syscalls
 
@@ -216,9 +216,9 @@ It is the repository for project2 in Operating System
     sema_up(&thread_current()->parent->load_sema);
     ```
 
-    
-
 - Rationale 
+
+  In this section, we take care of the sychronization problems and we implemented our logic correctly. We belive it will have a good performance.
 
 ### Task3: File Operation Syscalls
 
@@ -310,7 +310,7 @@ It is the repository for project2 in Operating System
 
 - Rationale 
 
-
+  In this part, most critical functions are not written by ourselves but by pintos. So we believe our functions works well.
 
 ### Questions in PDF
 
