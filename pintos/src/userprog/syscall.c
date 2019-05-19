@@ -176,7 +176,7 @@ void syscall_read(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	if (!check_address(buffer) || !check_address(buffer + size))
+	if (!check_address(buffer) )
 		ret = -1;
 
 	if (fd == STDIN_FILENO) /* read from std input*/
@@ -279,7 +279,7 @@ void syscall_write(struct intr_frame *f)
 	get_content(f->esp, &buffer, 6);
 	get_content(f->esp, &fd, 5);
 
-	if (!check_address(buffer) || !check_address(buffer + size))
+	if (!check_address(buffer) )
 		ret = -1;
 
 	if (fd == 1) /* write to stdout */
