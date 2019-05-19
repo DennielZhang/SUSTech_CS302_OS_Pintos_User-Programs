@@ -557,12 +557,12 @@ setup_stack(void **esp, char *file_name)
   }
 
   // word align
-  while ((int) *esp % 4 != 0) {
-        *esp -= sizeof(char);
-        char x = 0;
-        memcpy(*esp, &x, sizeof(char));
-  }
-
+  // while ((int) *esp % 4 != 0) {
+  //       *esp -= sizeof(char);
+  //       char x = 0;
+  //       memcpy(*esp, &x, sizeof(char));
+  // }
+  *esp -= ((unsigned)*esp % WORD_SIZE);
   //null ptr sentinel: null at argv[argc]
   *esp -= sizeof(int);
 
