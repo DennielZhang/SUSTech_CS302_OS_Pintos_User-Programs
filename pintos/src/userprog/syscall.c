@@ -47,7 +47,7 @@ syscall_init (void)
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
   int i;
-  for(i=0;i<MAXCALL;i++)
+  for(i=0;i<21;i++)
     sys_array[i]=NULL;
   sys_array[SYS_WRITE]=syscall_write;
   sys_array[SYS_EXIT]=syscall_exit;
