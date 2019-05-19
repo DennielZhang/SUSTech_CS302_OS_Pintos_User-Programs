@@ -309,7 +309,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   char *temp_ptr;
   cmdd = strtok_r(cmdd, " ", &temp_ptr);
 
-  acquire_file_lock();
   file = filesys_open(cmdd);
   free(cmdd);
   if (file == NULL)
