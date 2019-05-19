@@ -552,7 +552,7 @@ setup_stack (void **esp, char * file_name)
 
   int i;
   token = strtok_r (file_name, " ", &temp_ptr);
-  for (i=0;token!=NULL) ; i++){
+  for (i=0;token!=NULL ; i++){
       *esp -= (strlen(token) + 1);
       memcpy(*esp,token,strlen(token) + 1);
       argv[i]=*esp;
